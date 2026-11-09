@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prospector</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..900;1,9..144,340..900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: left rail (brand, tabs, filters) + scrollable list column + right-side
+   detail drawer that overlays on narrow screens instead of sitting beside the list */
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --surface-2:#f4f5f8; --border:#d9dce3;
+  --fg:#171b24; --muted:#5b6474; --accent:#a3802f; --accent-fg:#3a2c0d;
+  --ok:#2f7d52; --warn:#c9821f; --danger:#b23b3b; --info:#3b6ea5;
+  --shadow:0 10px 30px -12px rgba(23,27,36,.18);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11151c; --surface:#171c26; --surface-2:#1b2130; --border:#2b323f;
+    --fg:#e8eaf0; --muted:#8b93a3; --accent:#d2a94e; --accent-fg:#1b1407;
+    --ok:#4caf7d; --warn:#d79a3c; --danger:#d16161; --info:#6fa8dc;
+    --shadow:0 10px 30px -10px rgba(0,0,0,.55);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11151c; --surface:#171c26; --surface-2:#1b2130; --border:#2b323f;
+  --fg:#e8eaf0; --muted:#8b93a3; --accent:#d2a94e; --accent-fg:#1b1407;
+  --ok:#4caf7d; --warn:#d79a3c; --danger:#d16161; --info:#6fa8dc;
+  --shadow:0 10px 30px -10px rgba(0,0,0,.55);
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:14px; line-height:1.45;
+}
+h1,h2,h3,.display{font-family:'Fraunces',Georgia,serif; text-wrap:balance}
+a{color:var(--info)}
+button{font:inherit}
+::selection{background:color-mix(in srgb, var(--accent) 35%, transparent)}
+.mono{font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; font-variant-numeric:tabular-nums}
+.hidden{display:none!important}
+
+/* ---------- login ---------- */
+#login-screen{
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  padding:24px 16px;
+}
+.login-card{
+  width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:32px 28px; box-shadow:var(--shadow);
+}
+.login-brand{display:flex; align-items:baseline; gap:10px; margin-bottom:4px}
+.login-brand .mark{
+  width:34px; height:34px; border-radius:8px; background:var(--accent); color:var(--accent-fg);
+  display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:700; font-size:18px; flex:none;
+}
+.login-brand h1{font-size:24px; margin:0; font-weight:600}
+.login-sub{color:var(--muted); margin:2px 0 22px; font-size:13px}
+.field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px}
+.field label{font-size:12px; color:var(--muted); font-weight:600; letter-spacing:.02em}
+.field input{
+  border:1px solid var(--border); background:var(--surface-2); color:var(--fg);
+  border-radius:8px; padding:10px 12px; font-size:14px; font-family:inherit;
+}
+.field input:focus{outline:2px solid var(--accent); outline-offset:1px}
+.btn{
+  border:1px solid var(--border); background:var(--surface-2); color:var(--fg);
+  border-radius:8px; padding:10px 14px; font-weight:600; cursor:pointer; font-size:13.5px;
+}
+.btn:hover{border-color:color-mix(in srgb, var(--accent) 50%, var(--border))}
+.btn-primary{
+  width:100%; background:var(--accent); color:var(--accent-fg); border-color:transparent;
+}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-ghost{background:transparent; border-color:transparent; color:var(--info); padding:6px 4px}
+.login-toggle{text-align:center; margin-top:16px; font-size:13px; color:var(--muted)}
+.login-msg{
+  font-size:13px; padding:10px 12px; border-radius:8px; margin-bottom:14px; line-height:1.4;
+}
+.login-msg.err{background:color-mix(in srgb, var(--danger) 14%, transparent); color:var(--danger)}
+.login-msg.ok{background:color-mix(in srgb, var(--ok) 14%, transparent); color:var(--ok)}
+
+/* ---------- app shell ---------- */
+#app-screen{min-height:100vh; display:flex; flex-direction:column}
+header.topbar{
+  position:sticky; top:0; z-index:20;
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:12px 16px;
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+}
+.brand{display:flex; align-items:center; gap:8px; flex:none}
+.brand .mark{
+  width:26px; height:26px; border-radius:6px; background:var(--accent); color:var(--accent-fg);
+  display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:700; font-size:13px;
+}
+.brand span{font-family:'Fraunces',serif; font-weight:600; font-size:17px}
+.tabs{display:flex; gap:4px; background:var(--surface-2); border-radius:9px; padding:3px; flex:none}
+.tab{
+  padding:7px 14px; border-radius:7px; font-weight:600; font-size:13px; color:var(--muted);
+  cursor:pointer; border:none; background:transparent;
+}
+.tab.active{background:var(--surface); color:var(--fg); box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.search-wrap{flex:1; min-width:160px; max-width:360px}
+.search-wrap input{
+  width:100%; border:1px solid var(--border); background:var(--surface-2); color:var(--fg);
+  border-radius:8px; padding:8px 12px; font-size:13.5px; font-family:inherit;
+}
+.topbar-right{display:flex; gap:8px; align-items:center; margin-left:auto; flex:none}
+.who{font-size:12.5px; color:var(--muted)}
+
+main.wrap{flex:1; display:flex; min-width:0}
+.rail{
+  width:220px; flex:none; border-right:1px solid var(--border); padding:18px 14px;
+  display:flex; flex-direction:column; gap:18px; background:var(--surface);
+}
+.rail-group label{display:block; font-size:11.5px; font-weight:700; letter-spacing:.04em; color:var(--muted); text-transform:uppercase; margin-bottom:8px}
+.chip-list{display:flex; flex-direction:column; gap:4px}
+.chip{
+  border:1px solid transparent; background:transparent; color:var(--fg); text-align:left;
+  padding:7px 9px; border-radius:7px; font-size:13px; cursor:pointer; display:flex; justify-content:space-between; gap:8px;
+}
+.chip:hover{background:var(--surface-2)}
+.chip.active{background:var(--surface-2); border-color:var(--border); font-weight:600}
+.chip .count{color:var(--muted); font-size:12px}
+.stat-block{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:12px}
+.stat-block .big{font-family:'Fraunces',serif; font-size:26px; line-height:1}
+.stat-block .cap{color:var(--muted); font-size:12px; margin-top:2px}
+
+.content{flex:1; min-width:0; padding:18px 18px 40px 18px; overflow-x:hidden}
+.content-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:14px; flex-wrap:wrap}
+.content-head h2{margin:0; font-size:20px}
+.content-head .sub{color:var(--muted); font-size:12.5px}
+
+.list{display:flex; flex-direction:column; gap:8px}
+.row{
+  background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  padding:12px 14px; cursor:pointer; display:flex; flex-direction:column; gap:6px;
+}
+.row:hover{border-color:color-mix(in srgb, var(--accent) 45%, var(--border))}
+.row-top{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+.row-name{font-weight:700; font-size:14.5px; min-width:0}
+.row-domain{color:var(--muted); font-size:12px; font-family:'IBM Plex Mono',monospace; min-width:0; overflow-wrap:anywhere}
+.row-badges{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap}
+.row-sub{color:var(--muted); font-size:12.5px; min-width:0; overflow-wrap:anywhere}
+
+.pill{
+  display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px;
+  font-size:11px; font-weight:700; letter-spacing:.01em; white-space:nowrap; line-height:1.4;
+}
+.pill-dot{width:6px; height:6px; border-radius:50%; flex:none}
+.pill-muted{background:var(--surface-2); color:var(--muted); border:1px solid var(--border)}
+.pill-info{background:color-mix(in srgb, var(--info) 16%, transparent); color:var(--info)}
+.pill-ok{background:color-mix(in srgb, var(--ok) 16%, transparent); color:var(--ok)}
+.pill-warn{background:color-mix(in srgb, var(--warn) 18%, transparent); color:var(--warn)}
+.pill-danger{background:color-mix(in srgb, var(--danger) 16%, transparent); color:var(--danger)}
+.pill-accent{background:color-mix(in srgb, var(--accent) 20%, transparent); color:var(--accent)}
+
+.empty{color:var(--muted); font-size:13.5px; padding:30px 0; text-align:center}
+
+/* ---------- drawer ---------- */
+#backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:30; opacity:0; pointer-events:none;
+  transition:opacity .18s ease;
+}
+#backdrop.show{opacity:1; pointer-events:auto}
+#drawer{
+  position:fixed; top:0; right:0; bottom:0; width:min(440px, 100vw); background:var(--surface);
+  border-left:1px solid var(--border); z-index:31; transform:translateX(100%); transition:transform .22s ease;
+  display:flex; flex-direction:column; box-shadow:var(--shadow);
+}
+#drawer.show{transform:translateX(0)}
+.drawer-head{
+  padding:16px 18px 14px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:flex-start;
+}
+.drawer-head .titles{flex:1; min-width:0}
+.drawer-head h3{margin:0 0 4px; font-size:19px; overflow-wrap:anywhere}
+.drawer-head a.site-link{font-size:12.5px; word-break:break-all}
+.drawer-close{
+  border:none; background:var(--surface-2); color:var(--fg); width:28px; height:28px; border-radius:7px;
+  cursor:pointer; font-size:15px; flex:none;
+}
+.drawer-body{flex:1; overflow-y:auto; padding:16px 18px 32px; display:flex; flex-direction:column; gap:20px}
+.dsec label{display:block; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:8px}
+.dsec-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.kv{display:flex; flex-direction:column; gap:6px; font-size:13.5px}
+.kv .item{display:flex; justify-content:space-between; gap:10px; border-bottom:1px dashed var(--border); padding-bottom:5px}
+.kv .item span.v{text-align:right; min-width:0; overflow-wrap:anywhere}
+ul.plain{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px}
+ul.plain li{font-size:13.5px; padding-left:14px; position:relative}
+ul.plain li::before{content:"–"; position:absolute; left:0; color:var(--muted)}
+.gap-item{border-left:3px solid var(--border); padding:4px 0 4px 10px; font-size:13.5px}
+.gap-item.sev-high{border-color:var(--danger)}
+.gap-item.sev-medium{border-color:var(--warn)}
+.gap-item.sev-low{border-color:var(--muted)}
+.gap-item .t{font-weight:600; display:block}
+.person{border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px}
+.person .n{font-weight:700}
+.person .r{color:var(--muted)}
+.person .h{margin-top:3px; font-style:italic; color:var(--muted); font-size:12.5px}
+textarea, select{
+  width:100%; border:1px solid var(--border); background:var(--surface-2); color:var(--fg);
+  border-radius:8px; padding:9px 10px; font-size:13.5px; font-family:inherit; resize:vertical;
+}
+select{appearance:none}
+.save-row{display:flex; gap:8px; justify-content:flex-end}
+.vendor-link{color:var(--info); cursor:pointer; text-decoration:underline; font-weight:600}
+.copybtn{
+  border:1px solid var(--border); background:var(--surface-2); border-radius:6px; padding:2px 7px;
+  font-size:11px; cursor:pointer; color:var(--muted);
+}
+
+/* ---------- angles ---------- */
+.angle-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.angle-line{font-family:'Fraunces',serif; font-size:17px; font-weight:600}
+.angle-when{color:var(--muted); font-size:12.5px; font-style:italic}
+.angle-meta{display:flex; gap:8px; flex-wrap:wrap}
+.angle-toggle{align-self:flex-start; font-size:12.5px; color:var(--info); cursor:pointer; background:none; border:none; padding:0; font-weight:600}
+.angle-proof{display:none}
+.angle-proof.show{display:block}
+
+/* ---------- add lead modal ---------- */
+#add-modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:40; align-items:center; justify-content:center; padding:16px}
+#add-modal.show{display:flex}
+.modal-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; width:100%; max-width:420px; box-shadow:var(--shadow); max-height:90vh; overflow-y:auto}
+.modal-card h3{margin:0 0 14px}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+
+/* ---------- responsive ---------- */
+@media (max-width:860px){
+  .rail{display:none}
+  #mobile-filters{display:flex!important}
+  .row-badges{width:100%}
+}
+#mobile-filters{display:none; gap:6px; padding:10px 16px 0 16px; overflow-x:auto; background:var(--surface); border-bottom:1px solid var(--border)}
+#mobile-filters select{width:auto; flex:none}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-brand"><div class="mark">P</div><h1>Prospector</h1></div>
+    <p class="login-sub">The lead desk. Sign in to open it.</p>
+    <div id="login-msg"></div>
+    <form id="login-form">
+      <div class="field">
+        <label for="login-email">Email</label>
+        <input id="login-email" type="email" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" autocomplete="current-password" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary" id="login-submit">Sign in</button>
+    </form>
+    <div class="login-toggle">
+      <span id="login-toggle-text">New here?</span>
+      <button class="btn-ghost" id="login-toggle-btn" type="button">Create an account</button>
+    </div>
+  </div>
+</div>
+
+<div id="app-screen" class="hidden">
+  <header class="topbar">
+    <div class="brand"><div class="mark">P</div><span>Prospector</span></div>
+    <div class="tabs">
+      <button class="tab active" data-tab="leads" id="tab-leads">Leads</button>
+      <button class="tab" data-tab="angles" id="tab-angles">Angles</button>
+    </div>
+    <div class="search-wrap"><input id="search" type="text" placeholder="Search leads…"></div>
+    <div class="topbar-right">
+      <button class="btn" id="add-lead-btn">+ Add lead</button>
+      <span class="who" id="who"></span>
+      <button class="btn" id="signout-btn">Sign out</button>
+    </div>
+  </header>
+
+  <div id="mobile-filters">
+    <select id="mf-type"></select>
+    <select id="mf-status"></select>
+  </div>
+
+  <main class="wrap">
+    <nav class="rail" id="rail">
+      <div class="stat-block">
+        <div class="big mono" id="stat-total">0</div>
+        <div class="cap">leads captured</div>
+      </div>
+      <div class="rail-group">
+        <label>Type</label>
+        <div class="chip-list" id="type-chips"></div>
+      </div>
+      <div class="rail-group">
+        <label>Status</label>
+        <div class="chip-list" id="status-chips"></div>
+      </div>
+      <div class="rail-group">
+        <label>Ad spend</label>
+        <div class="chip-list" id="spend-chips"></div>
+      </div>
+    </nav>
+
+    <section class="content" id="leads-view">
+      <div class="content-head">
+        <h2>Leads</h2>
+        <span class="sub" id="leads-count-sub"></span>
+      </div>
+      <div class="list" id="leads-list"></div>
+    </section>
+
+    <section class="content hidden" id="angles-view">
+      <div class="content-head">
+        <h2>Angles</h2>
+        <span class="sub">Reusable pitch lines, tied to what they're up against</span>
+      </div>
+      <div class="list" id="angles-list"></div>
+    </section>
+  </main>
+</div>
+
+<div id="backdrop"></div>
+<aside id="drawer">
+  <div class="drawer-head">
+    <div class="titles">
+      <h3 id="d-name">—</h3>
+      <a id="d-site" class="site-link" href="#" target="_blank" rel="noopener"></a>
+    </div>
+    <button class="drawer-close" id="drawer-close" aria-label="Close">✕</button>
+  </div>
+  <div class="drawer-body" id="d-body"></div>
+</aside>
+
+<div id="add-modal">
+  <div class="modal-card">
+    <h3>Add a lead</h3>
+    <form id="add-form">
+      <div class="field">
+        <label for="af-domain">Domain (doc id) *</label>
+        <input id="af-domain" required placeholder="example.com">
+      </div>
+      <div class="field">
+        <label for="af-name">Name *</label>
+        <input id="af-name" required placeholder="Practice or firm name">
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="af-type">Type</label>
+          <select id="af-type">
+            <option value="practice_dental">Dental</option>
+            <option value="practice_legal">Legal</option>
+            <option value="practice_medspa">Medspa</option>
+            <option value="practice_vision">Vision</option>
+            <option value="agency">Agency</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="af-front">Front</label>
+          <select id="af-front">
+            <option value="">—</option>
+            <option value="direct">Direct</option>
+            <option value="partner">Partner</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="af-website">Website</label>
+        <input id="af-website" placeholder="https://…">
+      </div>
+      <div class="field">
+        <label for="af-notes">Notes</label>
+        <textarea id="af-notes" rows="3"></textarea>
+      </div>
+      <div class="save-row">
+        <button type="button" class="btn" id="af-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="af-submit">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+  "use strict";
+  var SUPABASE_URL = "https://vhdjswdwaisybkjozewz.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoZGpzd2R3YWlzeWJram96ZXd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxMDc5NDEsImV4cCI6MjEwOTY4Mzk0MX0.g3c2wRjkjMJJnbg6ezrKQVxPJnUPryi4bKxRPG6OeM8";
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  var STATUS_OPTS = ["new","contacted","replied","meeting","client","passed"];
+  var TYPE_LABEL = {practice_dental:"Dental", practice_legal:"Legal", practice_medspa:"Medspa", practice_vision:"Vision", agency:"Agency"};
+  var STATUS_PILL = {new:"muted", contacted:"info", replied:"accent", meeting:"accent", client:"ok", passed:"danger"};
+  var SPEND_PILL = {high:"warn", medium:"accent", low:"muted", none:"muted", unknown:"muted"};
+
+  var state = { leads: [], angles: [], filterType: "all", filterStatus: "all", filterSpend: "all", search: "", activeDocId: null, tab: "leads" };
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g, function(c){return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]; }); }
+  function pill(text, cls){ return '<span class="pill pill-'+cls+'">'+esc(text)+'</span>'; }
+
+  // ---------- auth ----------
+  var isSignup = false;
+  $("login-toggle-btn").addEventListener("click", function(){
+    isSignup = !isSignup;
+    $("login-submit").textContent = isSignup ? "Create account" : "Sign in";
+    $("login-toggle-text").textContent = isSignup ? "Already have an account?" : "New here?";
+    $("login-toggle-btn").textContent = isSignup ? "Sign in instead" : "Create an account";
+    $("login-msg").innerHTML = "";
+  });
+
+  $("login-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    var email = $("login-email").value.trim();
+    var password = $("login-password").value;
+    $("login-msg").innerHTML = "";
+    var action = isSignup ? sb.auth.signUp({email:email, password:password}) : sb.auth.signInWithPassword({email:email, password:password});
+    action.then(function(res){
+      if(res.error){
+        $("login-msg").innerHTML = '<div class="login-msg err">'+esc(res.error.message)+'</div>';
+        return;
+      }
+      if(isSignup && !res.data.session){
+        $("login-msg").innerHTML = '<div class="login-msg ok">Account created. Check '+esc(email)+' for a confirmation link, then come back and sign in.</div>';
+        isSignup = false;
+        $("login-submit").textContent = "Sign in";
+        $("login-toggle-text").textContent = "New here?";
+        $("login-toggle-btn").textContent = "Create an account";
+        return;
+      }
+      boot(res.data.session);
+    });
+  });
+
+  $("signout-btn").addEventListener("click", function(){
+    sb.auth.signOut().then(function(){ location.reload(); });
+  });
+
+  sb.auth.getSession().then(function(res){
+    if(res.data.session){ boot(res.data.session); }
+  });
+
+  function boot(session){
+    $("login-screen").classList.add("hidden");
+    $("app-screen").classList.remove("hidden");
+    $("who").textContent = session.user.email;
+    loadAll();
+  }
+
+  // ---------- data ----------
+  function loadAll(){
+    Promise.all([
+      sb.from("leads").select("*").order("updated_at", {ascending:false}),
+      sb.from("angles").select("*").order("created_at", {ascending:true})
+    ]).then(function(results){
+      state.leads = results[0].data || [];
+      state.angles = results[1].data || [];
+      renderChips();
+      renderLeads();
+      renderAngles();
+    });
+  }
+
+  // ---------- tabs ----------
+  $("tab-leads").addEventListener("click", function(){ switchTab("leads"); });
+  $("tab-angles").addEventListener("click", function(){ switchTab("angles"); });
+  function switchTab(tab){
+    state.tab = tab;
+    $("tab-leads").classList.toggle("active", tab==="leads");
+    $("tab-angles").classList.toggle("active", tab==="angles");
+    $("leads-view").classList.toggle("hidden", tab!=="leads");
+    $("angles-view").classList.toggle("hidden", tab!=="angles");
+    $("rail").style.display = tab==="leads" ? "" : "none";
+  }
+
+  // ---------- chips / filters ----------
+  function renderChips(){
+    var types = {all:0}; var statuses = {all:0}; var spends = {all:0};
+    state.leads.forEach(function(l){
+      var t = l.type || "unclassified"; types[t] = (types[t]||0)+1; types.all++;
+      var s = l.status || "new"; statuses[s] = (statuses[s]||0)+1; statuses.all++;
+      var sp = (l.data && l.data.ads && l.data.ads.spend_signal) || "unknown"; spends[sp] = (spends[sp]||0)+1; spends.all++;
+    });
+    $("type-chips").innerHTML = chipRow(types, "all", TYPE_LABEL, "unclassified", "Unclassified", state.filterType, "filterType");
+    $("status-chips").innerHTML = chipRow(statuses, "all", {}, null, null, state.filterStatus, "filterStatus", STATUS_OPTS);
+    $("spend-chips").innerHTML = chipRow(spends, "all", {}, null, null, state.filterSpend, "filterSpend", ["high","medium","low","none","unknown"]);
+    [].slice.call(document.querySelectorAll(".chip")).forEach(function(c){
+      c.addEventListener("click", function(){
+        state[c.dataset.key] = c.dataset.val;
+        renderChips(); renderLeads();
+      });
+    });
+    // mobile selects
+    fillSelect($("mf-type"), Object.assign({all:0}, types), TYPE_LABEL, "filterType");
+    fillSelect($("mf-status"), Object.assign({all:0}, statuses), {}, "filterStatus");
+  }
+  function chipRow(counts, allKey, labelMap, extraKey, extraLabel, activeVal, key, order){
+    var keys = order ? order.slice() : Object.keys(counts).filter(function(k){return k!=="all";});
+    if(extraKey && counts[extraKey]!=null && keys.indexOf(extraKey)===-1) keys.push(extraKey);
+    var html = chipHtml("all", "All", counts.all||0, activeVal, key);
+    keys.forEach(function(k){
+      if(!counts[k]) return;
+      var label = labelMap[k] || extraLabel || (k.charAt(0).toUpperCase()+k.slice(1));
+      html += chipHtml(k, label, counts[k], activeVal, key);
+    });
+    return html;
+  }
+  function chipHtml(val, label, count, activeVal, key){
+    return '<button class="chip'+(activeVal===val?" active":"")+'" data-val="'+esc(val)+'" data-key="'+key+'">'+esc(label)+'<span class="count">'+count+'</span></button>';
+  }
+  function fillSelect(sel, counts, labelMap, key){
+    sel.innerHTML = "";
+    Object.keys(counts).forEach(function(k){
+      var opt = document.createElement("option");
+      opt.value = k;
+      opt.textContent = (k==="all" ? "All types/status" : (labelMap[k] || (k.charAt(0).toUpperCase()+k.slice(1)))) + " ("+counts[k]+")";
+      sel.appendChild(opt);
+    });
+    sel.onchange = function(){ state[key] = sel.value; renderLeads(); };
+  }
+
+  $("search").addEventListener("input", function(){ state.search = this.value.toLowerCase(); renderLeads(); });
+
+  function matchesFilters(l){
+    if(state.filterType!=="all"){
+      var t = l.type || "unclassified";
+      if(t!==state.filterType) return false;
+    }
+    if(state.filterStatus!=="all" && (l.status||"new")!==state.filterStatus) return false;
+    if(state.filterSpend!=="all"){
+      var sp = (l.data && l.data.ads && l.data.ads.spend_signal) || "unknown";
+      if(sp!==state.filterSpend) return false;
+    }
+    if(state.search){
+      var hay = [l.doc_id, l.name, l.website, l.notes, l.next_action, (l.data&&l.data.summary)].join(" ").toLowerCase();
+      if(hay.indexOf(state.search)===-1) return false;
+    }
+    return true;
+  }
+
+  // ---------- leads list ----------
+  function renderLeads(){
+    var rows = state.leads.filter(matchesFilters);
+    $("stat-total").textContent = state.leads.length;
+    $("leads-count-sub").textContent = rows.length + " shown of " + state.leads.length;
+    if(!rows.length){
+      $("leads-list").innerHTML = '<div class="empty">No leads match these filters.</div>';
+      return;
+    }
+    $("leads-list").innerHTML = rows.map(function(l){
+      var name = l.name || l.doc_id;
+      var type = l.type ? (TYPE_LABEL[l.type]||l.type) : "Unclassified";
+      var status = l.status || "new";
+      var spend = (l.data && l.data.ads && l.data.ads.spend_signal) || null;
+      var next = l.next_action || (l.data && l.data.summary) || "";
+      var badges = pill(type, "muted");
+      if(l.front) badges += pill(l.front==="direct"?"Direct":"Partner", l.front==="direct"?"info":"muted");
+      badges += pill(status, STATUS_PILL[status]||"muted");
+      if(spend && spend!=="unknown") badges += pill(spend+" spend", SPEND_PILL[spend]||"muted");
+      return '<div class="row" data-doc="'+esc(l.doc_id)+'">'
+        + '<div class="row-top"><span class="row-name">'+esc(name)+'</span><span class="row-domain">'+esc(l.doc_id)+'</span>'
+        + '<div class="row-badges">'+badges+'</div></div>'
+        + (next ? '<div class="row-sub">'+esc(next)+'</div>' : '')
+        + '</div>';
+    }).join("");
+    [].slice.call(document.querySelectorAll(".row")).forEach(function(r){
+      r.addEventListener("click", function(){ openDrawer(r.dataset.doc); });
+    });
+  }
+
+  // ---------- drawer ----------
+  function findLead(docId){ return state.leads.filter(function(l){return l.doc_id===docId;})[0]; }
+
+  function openDrawer(docId){
+    var l = findLead(docId);
+    if(!l) return;
+    state.activeDocId = docId;
+    var d = l.data || {};
+    $("d-name").textContent = l.name || docId;
+    var site = l.website || d.website || "";
+    var siteLink = $("d-site");
+    if(site){ siteLink.href = site.indexOf("http")===0 ? site : "https://"+site; siteLink.textContent = site; siteLink.classList.remove("hidden"); }
+    else { siteLink.classList.add("hidden"); }
+
+    var sections = [];
+
+    // editable fields
+    sections.push(
+      '<div class="dsec"><label>Status &amp; next step</label>'
+      + '<div class="dsec-row" style="margin-bottom:8px">'
+      + '<select id="e-status">' + STATUS_OPTS.map(function(s){return '<option value="'+s+'"'+(s===(l.status||"new")?" selected":"")+'>'+s+'</option>';}).join("") + '</select>'
+      + '<select id="e-front" style="max-width:140px"><option value="">no front</option><option value="direct"'+(l.front==="direct"?" selected":"")+'>Direct</option><option value="partner"'+(l.front==="partner"?" selected":"")+'>Partner</option></select>'
+      + '</div>'
+      + '<textarea id="e-next" rows="2" placeholder="Next action">'+esc(l.next_action||"")+'</textarea>'
+      + '<div style="height:8px"></div>'
+      + '<textarea id="e-notes" rows="3" placeholder="Notes">'+esc(l.notes||"")+'</textarea>'
+      + '<div style="height:10px"></div>'
+      + '<div class="save-row"><button class="btn btn-primary" id="e-save">Save</button></div>'
+      + '</div>'
+    );
+
+    // contact
+    var emails = d.emails||[]; var phones = d.phones||[];
+    if(emails.length || phones.length){
+      sections.push('<div class="dsec"><label>Contact</label><div class="kv">'
+        + emails.map(function(e){ return '<div class="item"><span>'+esc(e.label||"Email")+'</span><span class="v">'+esc(e.address||"")+'</span></div>'; }).join("")
+        + phones.map(function(p){ return '<div class="item"><span>'+esc(p.label||"Phone")+'</span><span class="v mono">'+esc(p.number||"")+'</span></div>'; }).join("")
+        + '</div></div>');
+    }
+
+    // people
+    var people = d.people||[];
+    if(people.length){
+      sections.push('<div class="dsec"><label>People</label>' + people.map(function(p){
+        return '<div class="person"><span class="n">'+esc(p.name||"")+'</span> <span class="r">— '+esc(p.role||"")+'</span>'
+          + (p.email ? '<div class="mono" style="font-size:12px;margin-top:3px">'+esc(p.email)+'</div>' : "")
+          + (p.hook ? '<div class="h">'+esc(p.hook)+'</div>' : "")
+          + '</div>';
+      }).join("") + '</div>');
+    }
+
+    // locations / services / practice info
+    var locs = d.locations||[];
+    if(locs.length){
+      sections.push('<div class="dsec"><label>Locations</label><ul class="plain">' + locs.map(function(loc){
+        return '<li>'+esc(loc.label?loc.label+" — ":"")+esc(loc.address||"")+'</li>';
+      }).join("") + '</ul></div>');
+    }
+    var services = d.services||[];
+    if(services.length){
+      sections.push('<div class="dsec"><label>Services</label><div class="dsec-row">' + services.map(function(s){ return pill(s,"muted"); }).join("") + '</div></div>');
+    }
+
+    // vendor
+    if(d.vendor && (d.vendor.name || l.vendor_doc_id)){
+      var vendorLinkable = l.vendor_doc_id && findLead(l.vendor_doc_id);
+      sections.push('<div class="dsec"><label>Vendor behind the site</label><div class="kv">'
+        + '<div class="item"><span>Name</span><span class="v">'+(vendorLinkable ? '<span class="vendor-link" data-vendor="'+esc(l.vendor_doc_id)+'">'+esc(d.vendor.name||l.vendor_doc_id)+'</span>' : esc(d.vendor.name||""))+'</span></div>'
+        + (d.vendor.platform ? '<div class="item"><span>Platform</span><span class="v">'+esc(d.vendor.platform)+'</span></div>' : "")
+        + (d.vendor.evidence ? '<div class="item"><span>Evidence</span><span class="v">'+esc(d.vendor.evidence)+'</span></div>' : "")
+        + '</div></div>');
+    }
+
+    // ads
+    if(d.ads){
+      var ads = d.ads;
+      sections.push('<div class="dsec"><label>Ad spend</label><div class="dsec-row" style="margin-bottom:8px">'
+        + (ads.spend_signal ? pill("spend: "+ads.spend_signal, SPEND_PILL[ads.spend_signal]||"muted") : "")
+        + (ads.google_ads ? pill("google: "+ads.google_ads, "muted") : "")
+        + (ads.meta_ads ? pill("meta: "+ads.meta_ads, "muted") : "")
+        + (ads.call_tracking ? pill("calls: "+ads.call_tracking, "muted") : "")
+        + '</div>'
+        + (ads.live_ads ? '<div style="font-size:12.5px;color:var(--muted)">'+esc(ads.live_ads)+'</div>' : "")
+        + '</div>');
+    }
+
+    // gaps
+    var gaps = d.gaps||[];
+    if(gaps.length){
+      sections.push('<div class="dsec"><label>Gaps</label>' + gaps.map(function(g){
+        return '<div class="gap-item sev-'+esc(g.severity||"low")+'"><span class="t">'+esc(g.type||"")+'</span>'+esc(g.detail||"")+'</div>';
+      }).join("") + '</div>');
+    }
+
+    // hooks
+    var hooks = d.hooks||[];
+    if(hooks.length){
+      sections.push('<div class="dsec"><label>Hooks</label><ul class="plain">' + hooks.map(function(h){ return '<li>'+esc(h)+'</li>'; }).join("") + '</ul></div>');
+    }
+
+    // summary / notes-from-data
+    if(d.summary){
+      sections.push('<div class="dsec"><label>Summary</label><div style="font-size:13.5px">'+esc(d.summary)+'</div></div>');
+    }
+
+    $("d-body").innerHTML = sections.join("");
+    $("e-save").addEventListener("click", function(){ saveLeadEdits(docId); });
+    [].slice.call(document.querySelectorAll(".vendor-link")).forEach(function(v){
+      v.addEventListener("click", function(){ openDrawer(v.dataset.vendor); });
+    });
+
+    $("backdrop").classList.add("show");
+    $("drawer").classList.add("show");
+  }
+
+  function closeDrawer(){
+    $("backdrop").classList.remove("show");
+    $("drawer").classList.remove("show");
+    state.activeDocId = null;
+  }
+  $("drawer-close").addEventListener("click", closeDrawer);
+  $("backdrop").addEventListener("click", closeDrawer);
+
+  function saveLeadEdits(docId){
+    var l = findLead(docId);
+    if(!l) return;
+    var status = $("e-status").value;
+    var front = $("e-front").value || null;
+    var next_action = $("e-next").value;
+    var notes = $("e-notes").value;
+    var newData = Object.assign({}, l.data||{}, {status:status, next_action:next_action, notes:notes, front: front||undefined});
+    var btn = $("e-save"); btn.textContent = "Saving…"; btn.disabled = true;
+    sb.from("leads").update({status:status, front:front, next_action:next_action, notes:notes, data:newData}).eq("doc_id", docId).select().then(function(res){
+      btn.disabled = false; btn.textContent = "Save";
+      if(res.error){ alert("Couldn't save: " + res.error.message); return; }
+      var updated = res.data && res.data[0];
+      if(updated){
+        var idx = state.leads.findIndex(function(x){return x.doc_id===docId;});
+        if(idx>-1) state.leads[idx] = updated;
+      }
+      renderChips(); renderLeads();
+    });
+  }
+
+  // ---------- angles ----------
+  function renderAngles(){
+    if(!state.angles.length){ $("angles-list").innerHTML = '<div class="empty">No angles saved yet.</div>'; return; }
+    $("angles-list").innerHTML = state.angles.map(function(a, i){
+      var d = a.data || {};
+      var proof = d.proof || [];
+      return '<div class="angle-card">'
+        + '<div class="angle-line">'+esc(a.title||"")+'</div>'
+        + (d.when ? '<div class="angle-when">'+esc(d.when)+'</div>' : "")
+        + '<div class="angle-meta">'
+          + (d.audience ? pill(d.audience, "muted") : "")
+          + (a.vendor_doc_id ? pill("vs. "+a.vendor_doc_id, "accent") : "")
+          + (d.status ? pill(d.status, "muted") : "")
+        + '</div>'
+        + (proof.length ? '<button class="angle-toggle" data-i="'+i+'">Show proof ('+proof.length+')</button><ul class="plain angle-proof" id="proof-'+i+'">'+proof.map(function(p){return '<li>'+esc(p)+'</li>';}).join("")+'</ul>' : "")
+        + '</div>';
+    }).join("");
+    [].slice.call(document.querySelectorAll(".angle-toggle")).forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var box = $("proof-"+btn.dataset.i);
+        var showing = box.classList.toggle("show");
+        btn.textContent = (showing?"Hide proof":"Show proof") + " (" + box.querySelectorAll("li").length + ")";
+      });
+    });
+  }
+
+  // ---------- add lead modal ----------
+  $("add-lead-btn").addEventListener("click", function(){ $("add-modal").classList.add("show"); });
+  $("af-cancel").addEventListener("click", function(){ $("add-modal").classList.remove("show"); $("add-form").reset(); });
+  $("add-form").addEventListener("submit", function(e){
+    e.preventDefault();
+    var doc_id = $("af-domain").value.trim().replace(/^https?:\/\//,"").replace(/\/$/,"");
+    var name = $("af-name").value.trim();
+    var type = $("af-type").value;
+    var front = $("af-front").value || null;
+    var website = $("af-website").value.trim();
+    var notes = $("af-notes").value.trim();
+    var data = {practice_name:name, website:website, notes:notes, status:"new", type:type, date_found: new Date().toISOString().slice(0,10)};
+    var btn = $("af-submit"); btn.disabled = true; btn.textContent = "Adding…";
+    sb.from("leads").insert({doc_id:doc_id, name:name, type:type, front:front, status:"new", website:website, notes:notes, data:data}).select().then(function(res){
+      btn.disabled = false; btn.textContent = "Add";
+      if(res.error){ alert("Couldn't add lead: " + res.error.message); return; }
+      state.leads.unshift(res.data[0]);
+      $("add-modal").classList.remove("show");
+      $("add-form").reset();
+      renderChips(); renderLeads();
+    });
+  });
+})();
+</script>
+</body>
+</html>
