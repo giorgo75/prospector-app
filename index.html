@@ -161,6 +161,10 @@ main.wrap{flex:1; display:flex; min-width:0}
 .pill-accent{background:color-mix(in srgb, var(--accent) 20%, transparent); color:var(--accent)}
 
 .empty{color:var(--muted); font-size:13.5px; padding:30px 0; text-align:center}
+.client-group{display:flex; flex-direction:column; gap:8px; margin-bottom:22px}
+.client-group-head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; padding-bottom:6px; border-bottom:1px solid var(--border)}
+.client-group-title{font-size:12px; font-weight:700; letter-spacing:.07em; text-transform:uppercase}
+.client-group-blurb{color:var(--muted); font-size:12px}
 
 /* ---------- drawer ---------- */
 #backdrop{
@@ -274,6 +278,7 @@ select{appearance:none}
     <div class="brand"><div class="mark">P</div><span>Prospector</span></div>
     <div class="tabs">
       <button class="tab active" data-tab="leads" id="tab-leads">Leads</button>
+      <button class="tab" data-tab="clients" id="tab-clients">Clients</button>
       <button class="tab" data-tab="angles" id="tab-angles">Angles</button>
     </div>
     <div class="search-wrap"><input id="search" type="text" placeholder="Search leads…"></div>
@@ -315,6 +320,14 @@ select{appearance:none}
         <span class="sub" id="leads-count-sub"></span>
       </div>
       <div class="list" id="leads-list"></div>
+    </section>
+
+    <section class="content hidden" id="clients-view">
+      <div class="content-head">
+        <h2>Clients</h2>
+        <span class="sub" id="clients-count-sub"></span>
+      </div>
+      <div class="list" id="clients-list"></div>
     </section>
 
     <section class="content hidden" id="angles-view">
@@ -395,9 +408,11 @@ select{appearance:none}
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoZGpzd2R3YWlzeWJram96ZXd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxMDc5NDEsImV4cCI6MjEwOTY4Mzk0MX0.g3c2wRjkjMJJnbg6ezrKQVxPJnUPryi4bKxRPG6OeM8";
   var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  var STATUS_OPTS = ["new","contacted","replied","meeting","client","passed"];
+  var STATUS_OPTS = ["new","contacted","replied","meeting","client","partner_client","past_client","passed"];
   var TYPE_LABEL = {practice_dental:"Dental", practice_legal:"Legal", practice_medspa:"Medspa", practice_vision:"Vision", agency:"Agency"};
-  var STATUS_PILL = {new:"muted", contacted:"info", replied:"accent", meeting:"accent", client:"ok", passed:"danger"};
+  var STATUS_LABEL = {partner_client:"partner client", past_client:"past client"};
+  var STATUS_PILL = {new:"muted", contacted:"info", replied:"accent", meeting:"accent", client:"ok", partner_client:"info", past_client:"muted", passed:"danger"};
+  function statusLabel(s){ return STATUS_LABEL[s] || s; }
   var SPEND_PILL = {high:"warn", medium:"accent", low:"muted", none:"muted", unknown:"muted"};
 
   var state = { leads: [], angles: [], filterType: "all", filterStatus: "all", filterSpend: "all", search: "", activeDocId: null, tab: "leads" };
@@ -464,20 +479,25 @@ select{appearance:none}
       state.angles = results[1].data || [];
       renderChips();
       renderLeads();
+      renderClients();
       renderAngles();
+      updateClientTabCount();
     });
   }
 
   // ---------- tabs ----------
   $("tab-leads").addEventListener("click", function(){ switchTab("leads"); });
+  $("tab-clients").addEventListener("click", function(){ switchTab("clients"); });
   $("tab-angles").addEventListener("click", function(){ switchTab("angles"); });
   function switchTab(tab){
     state.tab = tab;
-    $("tab-leads").classList.toggle("active", tab==="leads");
-    $("tab-angles").classList.toggle("active", tab==="angles");
-    $("leads-view").classList.toggle("hidden", tab!=="leads");
-    $("angles-view").classList.toggle("hidden", tab!=="angles");
+    ["leads","clients","angles"].forEach(function(t){
+      $("tab-"+t).classList.toggle("active", tab===t);
+      $(t+"-view").classList.toggle("hidden", tab!==t);
+    });
     $("rail").style.display = tab==="leads" ? "" : "none";
+    $("search").placeholder = tab==="clients" ? "Search clients…" : "Search leads…";
+    if(tab==="clients") renderClients();
   }
 
   // ---------- chips / filters ----------
@@ -526,7 +546,10 @@ select{appearance:none}
     sel.onchange = function(){ state[key] = sel.value; renderLeads(); };
   }
 
-  $("search").addEventListener("input", function(){ state.search = this.value.toLowerCase(); renderLeads(); });
+  $("search").addEventListener("input", function(){
+    state.search = this.value.toLowerCase();
+    if(state.tab==="clients") renderClients(); else renderLeads();
+  });
 
   function matchesFilters(l){
     if(state.filterType!=="all"){
@@ -562,7 +585,7 @@ select{appearance:none}
       var next = l.next_action || (l.data && l.data.summary) || "";
       var badges = pill(type, "muted");
       if(l.front) badges += pill(l.front==="direct"?"Direct":"Partner", l.front==="direct"?"info":"muted");
-      badges += pill(status, STATUS_PILL[status]||"muted");
+      badges += pill(statusLabel(status), STATUS_PILL[status]||"muted");
       if(spend && spend!=="unknown") badges += pill(spend+" spend", SPEND_PILL[spend]||"muted");
       return '<div class="row" data-doc="'+esc(l.doc_id)+'">'
         + '<div class="row-top"><span class="row-name">'+esc(name)+'</span><span class="row-domain">'+esc(l.doc_id)+'</span>'
@@ -571,6 +594,88 @@ select{appearance:none}
         + '</div>';
     }).join("");
     [].slice.call(document.querySelectorAll(".row")).forEach(function(r){
+      r.addEventListener("click", function(){ openDrawer(r.dataset.doc); });
+    });
+  }
+
+  // ---------- clients ----------
+  // Three buckets, deliberately separate: "client" is a direct DNA Media client,
+  // "partner_client" is video/photo work that came through a partner agency,
+  // "past_client" is finished work kept for history.
+  var CLIENT_GROUPS = [
+    {status:"client",         heading:"Direct clients",  blurb:"Signed direct \u2014 the DNA Media offer."},
+    {status:"partner_client", heading:"Through partners", blurb:"Video/photo production booked via a partner agency."},
+    {status:"past_client",    heading:"Past clients",     blurb:"Work completed; kept for history."}
+  ];
+  function isClient(l){ return ["client","partner_client","past_client"].indexOf(l.status||"new") > -1; }
+  function isDirectClient(l){ return (l.status||"new")==="client"; }
+  function clientSince(l){ return (l.data && (l.data.client_since || l.data.signed_on)) || null; }
+  function viaPartner(l){ return (l.data && l.data.via_partner) || null; }
+
+  function updateClientTabCount(){
+    var n = state.leads.filter(isClient).length;
+    $("tab-clients").textContent = n ? ("Clients \u00b7 " + n) : "Clients";
+  }
+
+  function clientRow(l){
+    var name = l.name || l.doc_id;
+    var type = l.type ? (TYPE_LABEL[l.type]||l.type) : "Unclassified";
+    var since = clientSince(l);
+    var via = viaPartner(l);
+    var next = l.next_action || (l.data && l.data.summary) || "";
+    var badges = pill(type, "muted") + pill(statusLabel(l.status), STATUS_PILL[l.status]||"muted");
+    if(via) badges += pill("via " + via, "accent");
+    if(since) badges += pill("since " + since, "info");
+    return '<div class="row" data-doc="'+esc(l.doc_id)+'">'
+      + '<div class="row-top"><span class="row-name">'+esc(name)+'</span><span class="row-domain">'+esc(l.doc_id)+'</span>'
+      + '<div class="row-badges">'+badges+'</div></div>'
+      + (next ? '<div class="row-sub">'+esc(next)+'</div>' : '')
+      + '</div>';
+  }
+
+  function renderClients(){
+    function matchesSearch(l){
+      if(!state.search) return true;
+      var hay = [l.doc_id, l.name, l.website, l.notes, l.next_action, viaPartner(l), (l.data&&l.data.summary)].join(" ").toLowerCase();
+      return hay.indexOf(state.search)!==-1;
+    }
+    function bySince(a,b){
+      var da = clientSince(a) || "", db = clientSince(b) || "";
+      if(da && db) return db.localeCompare(da);
+      if(db) return 1;
+      if(da) return -1;
+      return (a.name||"").localeCompare(b.name||"");
+    }
+
+    var all = state.leads.filter(isClient);
+    var directCount = all.filter(isDirectClient).length;
+    var partnerCount = all.filter(function(l){return l.status==="partner_client";}).length;
+    var pastCount = all.length - directCount - partnerCount;
+    var sub = [];
+    if(directCount) sub.push(directCount + " direct");
+    if(partnerCount) sub.push(partnerCount + " through partners");
+    if(pastCount) sub.push(pastCount + " past");
+    $("clients-count-sub").textContent = sub.join(" \u00b7 ");
+
+    if(!all.length){
+      $("clients-list").innerHTML = '<div class="empty">No clients yet. Set a lead\u2019s status to <strong>client</strong> and it moves here.</div>';
+      return;
+    }
+
+    var html = "";
+    var shown = 0;
+    CLIENT_GROUPS.forEach(function(g){
+      var rows = all.filter(function(l){return l.status===g.status;}).filter(matchesSearch).sort(bySince);
+      if(!rows.length) return;
+      shown += rows.length;
+      html += '<div class="client-group">'
+        + '<div class="client-group-head"><span class="client-group-title">'+esc(g.heading)+'</span>'
+        + '<span class="client-group-blurb">'+esc(g.blurb)+'</span></div>'
+        + rows.map(clientRow).join("")
+        + '</div>';
+    });
+    $("clients-list").innerHTML = shown ? html : '<div class="empty">No clients match this search.</div>';
+    [].slice.call($("clients-list").querySelectorAll(".row")).forEach(function(r){
       r.addEventListener("click", function(){ openDrawer(r.dataset.doc); });
     });
   }
@@ -595,7 +700,7 @@ select{appearance:none}
     sections.push(
       '<div class="dsec"><label>Status &amp; next step</label>'
       + '<div class="dsec-row" style="margin-bottom:8px">'
-      + '<select id="e-status">' + STATUS_OPTS.map(function(s){return '<option value="'+s+'"'+(s===(l.status||"new")?" selected":"")+'>'+s+'</option>';}).join("") + '</select>'
+      + '<select id="e-status">' + STATUS_OPTS.map(function(s){return '<option value="'+s+'"'+(s===(l.status||"new")?" selected":"")+'>'+statusLabel(s)+'</option>';}).join("") + '</select>'
       + '<select id="e-front" style="max-width:140px"><option value="">no front</option><option value="direct"'+(l.front==="direct"?" selected":"")+'>Direct</option><option value="partner"'+(l.front==="partner"?" selected":"")+'>Partner</option></select>'
       + '</div>'
       + '<textarea id="e-next" rows="2" placeholder="Next action">'+esc(l.next_action||"")+'</textarea>'
@@ -706,6 +811,8 @@ select{appearance:none}
     var next_action = $("e-next").value;
     var notes = $("e-notes").value;
     var newData = Object.assign({}, l.data||{}, {status:status, next_action:next_action, notes:notes, front: front||undefined});
+    // stamp the day they became a client the first time the status flips
+    if(status==="client" && !newData.client_since) newData.client_since = new Date().toISOString().slice(0,10);
     var btn = $("e-save"); btn.textContent = "Saving…"; btn.disabled = true;
     sb.from("leads").update({status:status, front:front, next_action:next_action, notes:notes, data:newData}).eq("doc_id", docId).select().then(function(res){
       btn.disabled = false; btn.textContent = "Save";
@@ -715,7 +822,7 @@ select{appearance:none}
         var idx = state.leads.findIndex(function(x){return x.doc_id===docId;});
         if(idx>-1) state.leads[idx] = updated;
       }
-      renderChips(); renderLeads();
+      renderChips(); renderLeads(); renderClients(); updateClientTabCount();
     });
   }
 
