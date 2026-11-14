@@ -6,8 +6,6 @@
 <title>Prospector</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340..900;1,9..144,340..900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* layout: left rail (brand, tabs, filters) + scrollable list column + right-side
-   detail drawer that overlays on narrow screens instead of sitting beside the list */
 :root{
   --bg:#eef0f4; --surface:#ffffff; --surface-2:#f4f5f8; --border:#d9dce3;
   --fg:#171b24; --muted:#5b6474; --accent:#a3802f; --accent-fg:#3a2c0d;
@@ -45,7 +43,6 @@ button{font:inherit}
 .mono{font-family:'IBM Plex Mono','SF Mono',Consolas,monospace; font-variant-numeric:tabular-nums}
 .hidden{display:none!important}
 
-/* ---------- login ---------- */
 #login-screen{
   min-height:100vh; display:flex; align-items:center; justify-content:center;
   padding:24px 16px;
@@ -73,25 +70,24 @@ button{font:inherit}
   border-radius:8px; padding:10px 14px; font-weight:600; cursor:pointer; font-size:13.5px;
 }
 .btn:hover{border-color:color-mix(in srgb, var(--accent) 50%, var(--border))}
+.btn:disabled{opacity:.6; cursor:default}
 .btn-primary{
-  width:100%; background:var(--accent); color:var(--accent-fg); border-color:transparent;
+  width:auto; background:var(--accent); color:var(--accent-fg); border-color:transparent;
 }
 .btn-primary:hover{filter:brightness(1.06)}
-.btn-ghost{background:transparent; border-color:transparent; color:var(--info); padding:6px 4px}
-.login-toggle{text-align:center; margin-top:16px; font-size:13px; color:var(--muted)}
+.login-card .btn-primary{width:100%}
 .login-msg{
   font-size:13px; padding:10px 12px; border-radius:8px; margin-bottom:14px; line-height:1.4;
 }
 .login-msg.err{background:color-mix(in srgb, var(--danger) 14%, transparent); color:var(--danger)}
 .login-msg.ok{background:color-mix(in srgb, var(--ok) 14%, transparent); color:var(--ok)}
 
-/* ---------- app shell ---------- */
 #app-screen{min-height:100vh; display:flex; flex-direction:column}
 header.topbar{
   position:sticky; top:0; z-index:20;
   background:var(--surface); border-bottom:1px solid var(--border);
   padding:12px 16px;
-  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
 }
 .brand{display:flex; align-items:center; gap:8px; flex:none}
 .brand .mark{
@@ -99,23 +95,25 @@ header.topbar{
   display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:700; font-size:13px;
 }
 .brand span{font-family:'Fraunces',serif; font-weight:600; font-size:17px}
-.tabs{display:flex; gap:4px; background:var(--surface-2); border-radius:9px; padding:3px; flex:none}
+.tabs{display:flex; gap:4px; background:var(--surface-2); border-radius:9px; padding:3px; flex:none; flex-wrap:wrap}
 .tab{
-  padding:7px 14px; border-radius:7px; font-weight:600; font-size:13px; color:var(--muted);
+  padding:7px 12px; border-radius:7px; font-weight:600; font-size:13px; color:var(--muted);
   cursor:pointer; border:none; background:transparent;
 }
 .tab.active{background:var(--surface); color:var(--fg); box-shadow:0 1px 2px rgba(0,0,0,.08)}
-.search-wrap{flex:1; min-width:160px; max-width:360px}
+.search-wrap{flex:1; min-width:160px; max-width:320px}
 .search-wrap input{
   width:100%; border:1px solid var(--border); background:var(--surface-2); color:var(--fg);
   border-radius:8px; padding:8px 12px; font-size:13.5px; font-family:inherit;
 }
 .topbar-right{display:flex; gap:8px; align-items:center; margin-left:auto; flex:none}
-.who{font-size:12.5px; color:var(--muted)}
+.who{font-size:12.5px; color:var(--muted); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+.load-error{padding:10px 16px; background:color-mix(in srgb, var(--danger) 14%, transparent); color:var(--danger); font-weight:600; font-size:13px}
 
 main.wrap{flex:1; display:flex; min-width:0}
 .rail{
-  width:220px; flex:none; border-right:1px solid var(--border); padding:18px 14px;
+  width:230px; flex:none; border-right:1px solid var(--border); padding:18px 14px;
   display:flex; flex-direction:column; gap:18px; background:var(--surface);
 }
 .rail-group label{display:block; font-size:11.5px; font-weight:700; letter-spacing:.04em; color:var(--muted); text-transform:uppercase; margin-bottom:8px}
@@ -142,6 +140,8 @@ main.wrap{flex:1; display:flex; min-width:0}
   padding:12px 14px; cursor:pointer; display:flex; flex-direction:column; gap:6px;
 }
 .row:hover{border-color:color-mix(in srgb, var(--accent) 45%, var(--border))}
+.row.row-dnc{border-color:color-mix(in srgb, var(--danger) 55%, var(--border)); box-shadow:inset 3px 0 0 var(--danger)}
+.row.row-conflict{border-color:color-mix(in srgb, var(--warn) 55%, var(--border)); box-shadow:inset 3px 0 0 var(--warn)}
 .row-top{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
 .row-name{font-weight:700; font-size:14.5px; min-width:0}
 .row-domain{color:var(--muted); font-size:12px; font-family:'IBM Plex Mono',monospace; min-width:0; overflow-wrap:anywhere}
@@ -152,7 +152,6 @@ main.wrap{flex:1; display:flex; min-width:0}
   display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px;
   font-size:11px; font-weight:700; letter-spacing:.01em; white-space:nowrap; line-height:1.4;
 }
-.pill-dot{width:6px; height:6px; border-radius:50%; flex:none}
 .pill-muted{background:var(--surface-2); color:var(--muted); border:1px solid var(--border)}
 .pill-info{background:color-mix(in srgb, var(--info) 16%, transparent); color:var(--info)}
 .pill-ok{background:color-mix(in srgb, var(--ok) 16%, transparent); color:var(--ok)}
@@ -166,14 +165,13 @@ main.wrap{flex:1; display:flex; min-width:0}
 .client-group-title{font-size:12px; font-weight:700; letter-spacing:.07em; text-transform:uppercase}
 .client-group-blurb{color:var(--muted); font-size:12px}
 
-/* ---------- drawer ---------- */
 #backdrop{
   position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:30; opacity:0; pointer-events:none;
   transition:opacity .18s ease;
 }
 #backdrop.show{opacity:1; pointer-events:auto}
 #drawer{
-  position:fixed; top:0; right:0; bottom:0; width:min(440px, 100vw); background:var(--surface);
+  position:fixed; top:0; right:0; bottom:0; width:min(480px, 100vw); background:var(--surface);
   border-left:1px solid var(--border); z-index:31; transform:translateX(100%); transition:transform .22s ease;
   display:flex; flex-direction:column; box-shadow:var(--shadow);
 }
@@ -189,7 +187,7 @@ main.wrap{flex:1; display:flex; min-width:0}
   cursor:pointer; font-size:15px; flex:none;
 }
 .drawer-body{flex:1; overflow-y:auto; padding:16px 18px 32px; display:flex; flex-direction:column; gap:20px}
-.dsec label{display:block; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:8px}
+.dsec label.head{display:block; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:8px}
 .dsec-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
 .kv{display:flex; flex-direction:column; gap:6px; font-size:13.5px}
 .kv .item{display:flex; justify-content:space-between; gap:10px; border-bottom:1px dashed var(--border); padding-bottom:5px}
@@ -202,6 +200,7 @@ ul.plain li::before{content:"–"; position:absolute; left:0; color:var(--muted)
 .gap-item.sev-medium{border-color:var(--warn)}
 .gap-item.sev-low{border-color:var(--muted)}
 .gap-item .t{font-weight:600; display:block}
+.stack{display:flex; flex-direction:column; gap:8px}
 .person{border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px}
 .person .n{font-weight:700}
 .person .r{color:var(--muted)}
@@ -211,26 +210,19 @@ textarea, select{
   border-radius:8px; padding:9px 10px; font-size:13.5px; font-family:inherit; resize:vertical;
 }
 select{appearance:none}
-.save-row{display:flex; gap:8px; justify-content:flex-end}
-.vendor-link{color:var(--info); cursor:pointer; text-decoration:underline; font-weight:600}
-.copybtn{
-  border:1px solid var(--border); background:var(--surface-2); border-radius:6px; padding:2px 7px;
-  font-size:11px; cursor:pointer; color:var(--muted);
-}
+.save-row{display:flex; gap:8px; align-items:center; justify-content:space-between}
+.save-msg{font-size:12.5px; min-height:1.2em}
+.save-msg.ok{color:var(--ok)}
+.save-msg.err{color:var(--danger)}
+.vendor-link{color:var(--info); cursor:pointer; text-decoration:underline; font-weight:600; background:none; border:none; padding:0; font:inherit}
+.flag-banner{border-radius:10px; padding:10px 12px; font-size:13.5px; font-weight:700; line-height:1.4}
+.flag-banner.dnc{background:color-mix(in srgb, var(--danger) 16%, var(--surface)); color:var(--danger); border:1px solid color-mix(in srgb, var(--danger) 45%, var(--border))}
+.flag-banner.conflict{background:color-mix(in srgb, var(--warn) 18%, var(--surface)); color:var(--warn); border:1px solid color-mix(in srgb, var(--warn) 45%, var(--border))}
+.work-card{border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:13px}
+.work-card .t{font-weight:700}
+.work-card .n{color:var(--muted); margin-top:4px; font-size:12.5px}
+.hint{color:var(--muted); font-size:12px; margin-top:6px}
 
-/* ---------- angles ---------- */
-.angle-card{
-  background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px;
-  display:flex; flex-direction:column; gap:10px;
-}
-.angle-line{font-family:'Fraunces',serif; font-size:17px; font-weight:600}
-.angle-when{color:var(--muted); font-size:12.5px; font-style:italic}
-.angle-meta{display:flex; gap:8px; flex-wrap:wrap}
-.angle-toggle{align-self:flex-start; font-size:12.5px; color:var(--info); cursor:pointer; background:none; border:none; padding:0; font-weight:600}
-.angle-proof{display:none}
-.angle-proof.show{display:block}
-
-/* ---------- add lead modal ---------- */
 #add-modal{display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:40; align-items:center; justify-content:center; padding:16px}
 #add-modal.show{display:flex}
 .modal-card{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px; width:100%; max-width:420px; box-shadow:var(--shadow); max-height:90vh; overflow-y:auto}
@@ -238,14 +230,14 @@ select{appearance:none}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
 @media (max-width:420px){.grid2{grid-template-columns:1fr}}
 
-/* ---------- responsive ---------- */
 @media (max-width:860px){
   .rail{display:none}
   #mobile-filters{display:flex!important}
-  .row-badges{width:100%}
+  .row-badges{width:100%; margin-left:0}
+  .who{display:none}
 }
-#mobile-filters{display:none; gap:6px; padding:10px 16px 0 16px; overflow-x:auto; background:var(--surface); border-bottom:1px solid var(--border)}
-#mobile-filters select{width:auto; flex:none}
+#mobile-filters{display:none; gap:6px; padding:10px 16px; overflow-x:auto; background:var(--surface); border-bottom:1px solid var(--border)}
+#mobile-filters select{width:auto; flex:none; max-width:240px}
 </style>
 </head>
 <body>
@@ -266,10 +258,6 @@ select{appearance:none}
       </div>
       <button type="submit" class="btn btn-primary" id="login-submit">Sign in</button>
     </form>
-    <div class="login-toggle">
-      <span id="login-toggle-text">New here?</span>
-      <button class="btn-ghost" id="login-toggle-btn" type="button">Create an account</button>
-    </div>
   </div>
 </div>
 
@@ -277,50 +265,29 @@ select{appearance:none}
   <header class="topbar">
     <div class="brand"><div class="mark">P</div><span>Prospector</span></div>
     <div class="tabs">
-      <button class="tab active" data-tab="leads" id="tab-leads">Leads</button>
       <button class="tab" data-tab="clients" id="tab-clients">Clients</button>
-      <button class="tab" data-tab="angles" id="tab-angles">Angles</button>
+      <button class="tab active" data-tab="conversion" id="tab-conversion">Conversion</button>
+      <button class="tab" data-tab="prospects" id="tab-prospects">Prospects</button>
+      <button class="tab" data-tab="partners" id="tab-partners">Partners</button>
     </div>
-    <div class="search-wrap"><input id="search" type="text" placeholder="Search leads…"></div>
+    <div class="search-wrap"><input id="search" type="search" placeholder="Search conversion…"></div>
     <div class="topbar-right">
-      <button class="btn" id="add-lead-btn">+ Add lead</button>
+      <button class="btn" id="add-lead-btn" type="button">+ Add lead</button>
       <span class="who" id="who"></span>
-      <button class="btn" id="signout-btn">Sign out</button>
+      <button class="btn" id="signout-btn" type="button">Sign out</button>
     </div>
   </header>
-
-  <div id="mobile-filters">
-    <select id="mf-type"></select>
-    <select id="mf-status"></select>
-  </div>
+  <div id="load-error" class="load-error hidden"></div>
+  <div id="mobile-filters"></div>
 
   <main class="wrap">
     <nav class="rail" id="rail">
       <div class="stat-block">
         <div class="big mono" id="stat-total">0</div>
-        <div class="cap">leads captured</div>
+        <div class="cap" id="stat-cap">organizations</div>
       </div>
-      <div class="rail-group">
-        <label>Type</label>
-        <div class="chip-list" id="type-chips"></div>
-      </div>
-      <div class="rail-group">
-        <label>Status</label>
-        <div class="chip-list" id="status-chips"></div>
-      </div>
-      <div class="rail-group">
-        <label>Ad spend</label>
-        <div class="chip-list" id="spend-chips"></div>
-      </div>
+      <div id="rail-filters"></div>
     </nav>
-
-    <section class="content" id="leads-view">
-      <div class="content-head">
-        <h2>Leads</h2>
-        <span class="sub" id="leads-count-sub"></span>
-      </div>
-      <div class="list" id="leads-list"></div>
-    </section>
 
     <section class="content hidden" id="clients-view">
       <div class="content-head">
@@ -330,12 +297,28 @@ select{appearance:none}
       <div class="list" id="clients-list"></div>
     </section>
 
-    <section class="content hidden" id="angles-view">
+    <section class="content" id="conversion-view">
       <div class="content-head">
-        <h2>Angles</h2>
-        <span class="sub">Reusable pitch lines, tied to what they're up against</span>
+        <h2>Conversion</h2>
+        <span class="sub" id="conversion-count-sub"></span>
       </div>
-      <div class="list" id="angles-list"></div>
+      <div class="list" id="conversion-list"><div class="empty">Loading…</div></div>
+    </section>
+
+    <section class="content hidden" id="prospects-view">
+      <div class="content-head">
+        <h2>Prospects</h2>
+        <span class="sub" id="prospects-count-sub"></span>
+      </div>
+      <div class="list" id="prospects-list"></div>
+    </section>
+
+    <section class="content hidden" id="partners-view">
+      <div class="content-head">
+        <h2>Partners</h2>
+        <span class="sub" id="partners-count-sub"></span>
+      </div>
+      <div class="list" id="partners-list"></div>
     </section>
   </main>
 </div>
@@ -347,7 +330,7 @@ select{appearance:none}
       <h3 id="d-name">—</h3>
       <a id="d-site" class="site-link" href="#" target="_blank" rel="noopener"></a>
     </div>
-    <button class="drawer-close" id="drawer-close" aria-label="Close">✕</button>
+    <button class="drawer-close" id="drawer-close" type="button" aria-label="Close">✕</button>
   </div>
   <div class="drawer-body" id="d-body"></div>
 </aside>
@@ -357,7 +340,7 @@ select{appearance:none}
     <h3>Add a lead</h3>
     <form id="add-form">
       <div class="field">
-        <label for="af-domain">Domain (doc id) *</label>
+        <label for="af-domain">Domain *</label>
         <input id="af-domain" required placeholder="example.com">
       </div>
       <div class="field">
@@ -369,9 +352,10 @@ select{appearance:none}
           <label for="af-type">Type</label>
           <select id="af-type">
             <option value="practice_dental">Dental</option>
-            <option value="practice_legal">Legal</option>
+            <option value="practice_medical">Medical</option>
             <option value="practice_medspa">Medspa</option>
             <option value="practice_vision">Vision</option>
+            <option value="practice_legal">Legal</option>
             <option value="agency">Agency</option>
           </select>
         </div>
@@ -406,391 +390,625 @@ select{appearance:none}
   "use strict";
   var SUPABASE_URL = "https://vhdjswdwaisybkjozewz.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoZGpzd2R3YWlzeWJram96ZXd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxMDc5NDEsImV4cCI6MjEwOTY4Mzk0MX0.g3c2wRjkjMJJnbg6ezrKQVxPJnUPryi4bKxRPG6OeM8";
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  var STATUS_OPTS = ["new","contacted","replied","meeting","client","partner_client","past_client","passed"];
-  var TYPE_LABEL = {practice_dental:"Dental", practice_legal:"Legal", practice_medspa:"Medspa", practice_vision:"Vision", agency:"Agency"};
-  var STATUS_LABEL = {partner_client:"partner client", past_client:"past client"};
-  var STATUS_PILL = {new:"muted", contacted:"info", replied:"accent", meeting:"accent", client:"ok", partner_client:"info", past_client:"muted", passed:"danger"};
-  function statusLabel(s){ return STATUS_LABEL[s] || s; }
+  // Reads organizations plus contacts, locations, site_audits, past_work, and
+  // activities. Relationship and stage write back to organizations; the
+  // database trigger logs those changes. Track is generated from relationship.
+  var TABS = [
+    {id:"clients", label:"Clients"},
+    {id:"conversion", label:"Conversion"},
+    {id:"prospects", label:"Prospects"},
+    {id:"partners", label:"Partners"}
+  ];
+  var SEARCH_PH = {
+    clients:"Search clients…",
+    conversion:"Search conversion…",
+    prospects:"Search prospects…",
+    partners:"Search partners…"
+  };
+  var TAB_TITLE = {clients:"Clients", conversion:"Conversion", prospects:"Prospects", partners:"Partners"};
+  var STAGE_OPTS = ["new","researched","reintroduced","contacted","replied","meeting","proposal","won","nurture","lost"];
+  var PRACTICE_RELS = ["prospect","past_partner_practice","direct_client","past_direct_client"];
+  var AGENCY_RELS = ["prospect_partner","active_partner","past_partner","not_a_fit"];
+  var VERTICAL_OPTS = ["dental","medical","medspa","vision","legal"];
+  var TYPE_LABEL = {
+    agency:"Agency",
+    dental:"Dental",
+    medical:"Medical",
+    medspa:"Medspa",
+    vision:"Vision",
+    legal:"Legal",
+    practice_dental:"Dental",
+    practice_medical:"Medical",
+    practice_medspa:"Medspa",
+    practice_vision:"Vision",
+    practice_legal:"Legal"
+  };
+  var REL_LABEL = {
+    prospect:"Prospect",
+    past_partner_practice:"Past partner practice",
+    direct_client:"Direct client",
+    past_direct_client:"Past direct client",
+    prospect_partner:"Prospect partner",
+    active_partner:"Active partner",
+    past_partner:"Past partner",
+    not_a_fit:"Not a fit"
+  };
+  var STAGE_PILL = {new:"muted", researched:"info", reintroduced:"info", contacted:"info", replied:"accent", meeting:"accent", proposal:"accent", won:"ok", nurture:"warn", lost:"danger"};
+  var REL_PILL = {prospect:"info", past_partner_practice:"accent", direct_client:"ok", past_direct_client:"muted", prospect_partner:"info", active_partner:"ok", past_partner:"muted", not_a_fit:"danger"};
   var SPEND_PILL = {high:"warn", medium:"accent", low:"muted", none:"muted", unknown:"muted"};
+  var CLIENT_GROUPS = [
+    {key:"direct_client", heading:"Direct clients", blurb:"Signed direct — the DNA Practice offer."},
+    {key:"past_direct_client", heading:"Past direct clients", blurb:"Direct work that's finished, kept on the desk."}
+  ];
+  var PARTNER_GROUPS = [
+    {key:"active_partner", heading:"Active partners", blurb:"Agencies the work runs through now."},
+    {key:"prospect_partner", heading:"Prospect partners", blurb:"Agencies to approach about white-label work."},
+    {key:"past_partner", heading:"Past partners", blurb:"Agencies the work used to come through."},
+    {key:"not_a_fit", heading:"Not a fit", blurb:"Reviewed and set aside."}
+  ];
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  var state = { leads: [], angles: [], filterType: "all", filterStatus: "all", filterSpend: "all", search: "", activeDocId: null, tab: "leads" };
+  var state = {
+    orgs:[], byDomain:{}, campaigns:{},
+    tab:"conversion", search:"",
+    filterRel:"all", filterStage:"all", filterVertical:"all",
+    filterSpend:"all", filterPartner:"all", filterFlag:"all",
+    activeDomain:null, flash:null, loaded:false, loadError:"", pendingDomain:null, booted:false
+  };
 
   function $(id){ return document.getElementById(id); }
-  function esc(s){ return (s==null?"":String(s)).replace(/[&<>"']/g, function(c){return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]; }); }
-  function pill(text, cls){ return '<span class="pill pill-'+cls+'">'+esc(text)+'</span>'; }
+  function esc(s){
+    return (s==null?"":String(s)).replace(/[&<>"']/g, function(c){
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
+    });
+  }
+  function pill(text, cls){ return '<span class="pill pill-'+(cls||"muted")+'">'+esc(text)+'</span>'; }
+  function humanize(s){ return String(s||"").replace(/_/g, " "); }
+  function typeLabel(v){ return TYPE_LABEL[v] || humanize(v); }
+  function stageLabel(s){ return humanize(s || "new"); }
+  function asArray(v){
+    if(Array.isArray(v)) return v;
+    if(typeof v === "string"){
+      try { var p = JSON.parse(v); if(Array.isArray(p)) return p; } catch(e){}
+    }
+    return [];
+  }
+  function todayISO(){
+    var d = new Date();
+    function p(n){ return (n<10?"0":"") + n; }
+    return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());
+  }
+  function formatDate(iso){
+    if(!iso) return "";
+    var m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(!m) return String(iso);
+    return MONTHS[Number(m[2])-1] + " " + Number(m[3]) + ", " + m[1];
+  }
+  function dncDate(o){ return o.do_not_contact_until ? String(o.do_not_contact_until).slice(0,10) : ""; }
+  function dncActive(o){ var d = dncDate(o); return !!d && d >= todayISO(); }
+  function siteHref(site){
+    if(!site) return "";
+    var s = String(site).trim();
+    if(!s || /^javascript:/i.test(s)) return "";
+    if(/^https?:\/\//i.test(s)) return s;
+    return "https://" + s;
+  }
+  function legacyType(o){
+    if(o.kind === "agency") return "agency";
+    if(o.vertical) return "practice_" + o.vertical;
+    return "";
+  }
+  function bucket(o){
+    if(o.relationship === "direct_client" || o.relationship === "past_direct_client") return "clients";
+    if(o.relationship === "past_partner_practice") return "conversion";
+    if(o.kind === "agency" || o.relationship === "prospect_partner" || o.relationship === "active_partner" || o.relationship === "past_partner" || o.relationship === "not_a_fit") return "partners";
+    return "prospects";
+  }
+  function partnerName(domain){
+    if(!domain) return "";
+    var o = state.byDomain[domain];
+    return (o && o.name) || domain;
+  }
+  function latestAudit(o){
+    var list = o.audits || [];
+    if(!list.length) return null;
+    var best = list[0], i, key = function(a){ return (a.checked_on || "") + " " + (a.created_at || ""); };
+    for(i=1;i<list.length;i++){ if(key(list[i]) > key(best)) best = list[i]; }
+    return best;
+  }
+  function conversionPartnerKey(o){
+    var jobs = (o.work || []).filter(function(w){ return w.served_via; });
+    if(!jobs.length) return "";
+    jobs.sort(function(a,b){ return String(b.shot_on||b.created_at||"").localeCompare(String(a.shot_on||a.created_at||"")); });
+    return jobs[0].served_via;
+  }
+  function partnerLabels(o){
+    var seen = {}, out = [];
+    (o.work || []).forEach(function(w){
+      if(!w.served_via || seen[w.served_via]) return;
+      seen[w.served_via] = true;
+      out.push(partnerName(w.served_via));
+    });
+    return out;
+  }
+  function sortOrg(a,b){
+    var da = dncActive(a) ? 1 : 0, db = dncActive(b) ? 1 : 0;
+    if(da !== db) return da - db;
+    return (a.name||"").localeCompare(b.name||"");
+  }
+  function sortWork(a,b){
+    return String(b.shot_on||b.created_at||"").localeCompare(String(a.shot_on||a.created_at||""));
+  }
 
-  // ---------- auth ----------
-  var isSignup = false;
-  $("login-toggle-btn").addEventListener("click", function(){
-    isSignup = !isSignup;
-    $("login-submit").textContent = isSignup ? "Create account" : "Sign in";
-    $("login-toggle-text").textContent = isSignup ? "Already have an account?" : "New here?";
-    $("login-toggle-btn").textContent = isSignup ? "Sign in instead" : "Create an account";
-    $("login-msg").innerHTML = "";
-  });
+  if(!window.supabase){
+    $("login-msg").innerHTML = '<div class="login-msg err">Couldn’t load the database client. Check the network and reload.</div>';
+    return;
+  }
+  var db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   $("login-form").addEventListener("submit", function(e){
     e.preventDefault();
     var email = $("login-email").value.trim();
     var password = $("login-password").value;
+    var btn = $("login-submit");
     $("login-msg").innerHTML = "";
-    var action = isSignup ? sb.auth.signUp({email:email, password:password}) : sb.auth.signInWithPassword({email:email, password:password});
-    action.then(function(res){
+    btn.disabled = true;
+    db.auth.signInWithPassword({email:email, password:password}).then(function(res){
+      btn.disabled = false;
       if(res.error){
         $("login-msg").innerHTML = '<div class="login-msg err">'+esc(res.error.message)+'</div>';
         return;
       }
-      if(isSignup && !res.data.session){
-        $("login-msg").innerHTML = '<div class="login-msg ok">Account created. Check '+esc(email)+' for a confirmation link, then come back and sign in.</div>';
-        isSignup = false;
-        $("login-submit").textContent = "Sign in";
-        $("login-toggle-text").textContent = "New here?";
-        $("login-toggle-btn").textContent = "Create an account";
-        return;
-      }
       boot(res.data.session);
+    }, function(err){
+      btn.disabled = false;
+      $("login-msg").innerHTML = '<div class="login-msg err">'+esc(err && err.message ? err.message : "Sign-in failed")+'</div>';
     });
   });
 
   $("signout-btn").addEventListener("click", function(){
-    sb.auth.signOut().then(function(){ location.reload(); });
+    db.auth.signOut().then(function(){ location.reload(); });
   });
 
-  sb.auth.getSession().then(function(res){
-    if(res.data.session){ boot(res.data.session); }
+  db.auth.getSession().then(function(res){
+    if(res.data.session) boot(res.data.session);
   });
 
   function boot(session){
+    if(state.booted || !session) return;
+    state.booted = true;
     $("login-screen").classList.add("hidden");
     $("app-screen").classList.remove("hidden");
-    $("who").textContent = session.user.email;
+    $("who").textContent = session.user.email || "";
     loadAll();
   }
 
-  // ---------- data ----------
   function loadAll(){
-    Promise.all([
-      sb.from("leads").select("*").order("updated_at", {ascending:false}),
-      sb.from("angles").select("*").order("created_at", {ascending:true})
-    ]).then(function(results){
-      state.leads = results[0].data || [];
-      state.angles = results[1].data || [];
-      renderChips();
-      renderLeads();
-      renderClients();
-      renderAngles();
-      updateClientTabCount();
-    });
-  }
-
-  // ---------- tabs ----------
-  $("tab-leads").addEventListener("click", function(){ switchTab("leads"); });
-  $("tab-clients").addEventListener("click", function(){ switchTab("clients"); });
-  $("tab-angles").addEventListener("click", function(){ switchTab("angles"); });
-  function switchTab(tab){
-    state.tab = tab;
-    ["leads","clients","angles"].forEach(function(t){
-      $("tab-"+t).classList.toggle("active", tab===t);
-      $(t+"-view").classList.toggle("hidden", tab!==t);
-    });
-    $("rail").style.display = tab==="leads" ? "" : "none";
-    $("search").placeholder = tab==="clients" ? "Search clients…" : "Search leads…";
-    if(tab==="clients") renderClients();
-  }
-
-  // ---------- chips / filters ----------
-  function renderChips(){
-    var types = {all:0}; var statuses = {all:0}; var spends = {all:0};
-    state.leads.forEach(function(l){
-      var t = l.type || "unclassified"; types[t] = (types[t]||0)+1; types.all++;
-      var s = l.status || "new"; statuses[s] = (statuses[s]||0)+1; statuses.all++;
-      var sp = (l.data && l.data.ads && l.data.ads.spend_signal) || "unknown"; spends[sp] = (spends[sp]||0)+1; spends.all++;
-    });
-    $("type-chips").innerHTML = chipRow(types, "all", TYPE_LABEL, "unclassified", "Unclassified", state.filterType, "filterType");
-    $("status-chips").innerHTML = chipRow(statuses, "all", {}, null, null, state.filterStatus, "filterStatus", STATUS_OPTS);
-    $("spend-chips").innerHTML = chipRow(spends, "all", {}, null, null, state.filterSpend, "filterSpend", ["high","medium","low","none","unknown"]);
-    [].slice.call(document.querySelectorAll(".chip")).forEach(function(c){
-      c.addEventListener("click", function(){
-        state[c.dataset.key] = c.dataset.val;
-        renderChips(); renderLeads();
+    var names = ["organizations","contacts","locations","site_audits","past_work","activities","campaigns"];
+    var queries = {
+      organizations: db.from("organizations").select("*").order("name", {ascending:true}).limit(2000),
+      contacts: db.from("contacts").select("*").limit(5000),
+      locations: db.from("locations").select("*").limit(5000),
+      site_audits: db.from("site_audits").select("*").limit(5000),
+      past_work: db.from("past_work").select("*").limit(2000),
+      activities: db.from("activities").select("*").order("occurred_at", {ascending:false}).limit(3000),
+      campaigns: db.from("campaigns").select("id,name,track,front").limit(200)
+    };
+    return Promise.all(names.map(function(n){ return queries[n]; })).then(function(results){
+      var data = {}, err = "";
+      names.forEach(function(n, i){
+        if(results[i].error && !err) err = results[i].error.message;
+        data[n] = results[i].data || [];
       });
+      state.loaded = true;
+      if(err){
+        state.loadError = err;
+        $("load-error").textContent = err;
+        $("load-error").classList.remove("hidden");
+        render();
+        return;
+      }
+      state.loadError = "";
+      $("load-error").classList.add("hidden");
+      indexData(data);
+      render();
+      if(state.pendingDomain && state.byDomain[state.pendingDomain]) openDrawer(state.pendingDomain);
+      state.pendingDomain = null;
+    }, function(err){
+      state.loaded = true;
+      state.loadError = err && err.message ? err.message : "Couldn't load the desk.";
+      $("load-error").textContent = state.loadError;
+      $("load-error").classList.remove("hidden");
+      render();
     });
-    // mobile selects
-    fillSelect($("mf-type"), Object.assign({all:0}, types), TYPE_LABEL, "filterType");
-    fillSelect($("mf-status"), Object.assign({all:0}, statuses), {}, "filterStatus");
-  }
-  function chipRow(counts, allKey, labelMap, extraKey, extraLabel, activeVal, key, order){
-    var keys = order ? order.slice() : Object.keys(counts).filter(function(k){return k!=="all";});
-    if(extraKey && counts[extraKey]!=null && keys.indexOf(extraKey)===-1) keys.push(extraKey);
-    var html = chipHtml("all", "All", counts.all||0, activeVal, key);
-    keys.forEach(function(k){
-      if(!counts[k]) return;
-      var label = labelMap[k] || extraLabel || (k.charAt(0).toUpperCase()+k.slice(1));
-      html += chipHtml(k, label, counts[k], activeVal, key);
-    });
-    return html;
-  }
-  function chipHtml(val, label, count, activeVal, key){
-    return '<button class="chip'+(activeVal===val?" active":"")+'" data-val="'+esc(val)+'" data-key="'+key+'">'+esc(label)+'<span class="count">'+count+'</span></button>';
-  }
-  function fillSelect(sel, counts, labelMap, key){
-    sel.innerHTML = "";
-    Object.keys(counts).forEach(function(k){
-      var opt = document.createElement("option");
-      opt.value = k;
-      opt.textContent = (k==="all" ? "All types/status" : (labelMap[k] || (k.charAt(0).toUpperCase()+k.slice(1)))) + " ("+counts[k]+")";
-      sel.appendChild(opt);
-    });
-    sel.onchange = function(){ state[key] = sel.value; renderLeads(); };
   }
 
-  $("search").addEventListener("input", function(){
-    state.search = this.value.toLowerCase();
-    if(state.tab==="clients") renderClients(); else renderLeads();
+  function indexData(data){
+    var by = {};
+    state.campaigns = {};
+    (data.campaigns || []).forEach(function(c){ state.campaigns[c.id] = c; });
+    state.orgs = data.organizations || [];
+    state.orgs.forEach(function(o){
+      o.contacts = [];
+      o.locations = [];
+      o.audits = [];
+      o.work = [];
+      o.activities = [];
+      by[o.domain] = o;
+    });
+    (data.contacts || []).forEach(function(c){ if(by[c.org_domain]) by[c.org_domain].contacts.push(c); });
+    (data.locations || []).forEach(function(l){ if(by[l.org_domain]) by[l.org_domain].locations.push(l); });
+    (data.site_audits || []).forEach(function(a){ if(by[a.org_domain]) by[a.org_domain].audits.push(a); });
+    (data.past_work || []).forEach(function(w){ if(by[w.practice_domain]) by[w.practice_domain].work.push(w); });
+    (data.activities || []).forEach(function(a){ if(by[a.org_domain]) by[a.org_domain].activities.push(a); });
+    state.orgs.forEach(function(o){
+      o.contacts.sort(function(a,b){
+        function rank(c){ return c.is_poc ? 0 : (c.is_generic_inbox ? 2 : 1); }
+        var d = rank(a) - rank(b);
+        if(d) return d;
+        return (a.name||a.email||"").localeCompare(b.name||b.email||"");
+      });
+      o.work.sort(sortWork);
+    });
+    state.byDomain = by;
+  }
+
+  document.querySelector(".tabs").addEventListener("click", function(e){
+    var t = e.target.closest(".tab");
+    if(!t) return;
+    switchTab(t.dataset.tab);
   });
 
-  function matchesFilters(l){
-    if(state.filterType!=="all"){
-      var t = l.type || "unclassified";
-      if(t!==state.filterType) return false;
+  function switchTab(tab){
+    if(!tab || state.tab === tab) return;
+    state.tab = tab;
+    state.filterRel = "all";
+    state.filterStage = "all";
+    state.filterVertical = "all";
+    state.filterSpend = "all";
+    state.filterPartner = "all";
+    state.filterFlag = "all";
+    render();
+  }
+
+  function paintTabs(){
+    TABS.forEach(function(t){
+      var n = state.orgs.filter(function(o){ return bucket(o) === t.id; }).length;
+      var btn = $("tab-"+t.id);
+      btn.textContent = state.loaded ? (t.label + " · " + n) : t.label;
+      btn.dataset.count = String(n);
+      btn.classList.toggle("active", state.tab === t.id);
+      $(t.id+"-view").classList.toggle("hidden", state.tab !== t.id);
+    });
+    $("search").placeholder = SEARCH_PH[state.tab] || "Search…";
+    $("stat-total").textContent = String(state.orgs.length);
+    $("stat-cap").textContent = "organizations";
+  }
+
+  function countBy(rows, fn){
+    var counts = {};
+    rows.forEach(function(o){
+      var k = fn(o);
+      if(k == null || k === "") k = "unset";
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    return counts;
+  }
+
+  function filterGroups(tab, rows){
+    if(tab === "clients"){
+      return [chipGroup("Relationship", "filterRel", countBy(rows, function(o){ return o.relationship; }), REL_LABEL, ["direct_client","past_direct_client"])];
     }
-    if(state.filterStatus!=="all" && (l.status||"new")!==state.filterStatus) return false;
-    if(state.filterSpend!=="all"){
-      var sp = (l.data && l.data.ads && l.data.ads.spend_signal) || "unknown";
-      if(sp!==state.filterSpend) return false;
+    if(tab === "conversion"){
+      var partnerCounts = countBy(rows, function(o){ return conversionPartnerKey(o) || "unset"; });
+      var partnerLabels = {unset:"No partner on file"};
+      Object.keys(partnerCounts).forEach(function(k){ if(k !== "unset") partnerLabels[k] = partnerName(k); });
+      return [
+        chipGroup("Served via", "filterPartner", partnerCounts, partnerLabels, null),
+        chipGroup("Stage", "filterStage", countBy(rows, function(o){ return o.stage || "new"; }), null, STAGE_OPTS),
+        chipGroup("Flags", "filterFlag", flagCounts(rows), {dnc:"Do not contact", conflict:"Partner conflict", clear:"Clear"}, ["dnc","conflict","clear"])
+      ];
     }
-    if(state.search){
-      var hay = [l.doc_id, l.name, l.website, l.notes, l.next_action, (l.data&&l.data.summary)].join(" ").toLowerCase();
-      if(hay.indexOf(state.search)===-1) return false;
+    if(tab === "prospects"){
+      return [
+        chipGroup("Type", "filterVertical", countBy(rows, function(o){ return o.vertical || "unset"; }), TYPE_LABEL, VERTICAL_OPTS.concat(["unset"])),
+        chipGroup("Stage", "filterStage", countBy(rows, function(o){ return o.stage || "new"; }), null, STAGE_OPTS),
+        chipGroup("Ad spend", "filterSpend", countBy(rows, function(o){ return (latestAudit(o) || {}).spend_signal || "unknown"; }), null, ["high","medium","low","none","unknown"])
+      ];
+    }
+    return [
+      chipGroup("Relationship", "filterRel", countBy(rows, function(o){ return o.relationship; }), REL_LABEL, AGENCY_RELS),
+      chipGroup("Stage", "filterStage", countBy(rows, function(o){ return o.stage || "new"; }), null, STAGE_OPTS)
+    ];
+  }
+
+  function flagCounts(rows){
+    var c = {dnc:0, conflict:0, clear:0};
+    rows.forEach(function(o){
+      var d = dncActive(o), k = !!o.partner_conflict;
+      if(d) c.dnc++;
+      if(k) c.conflict++;
+      if(!d && !k) c.clear++;
+    });
+    return c;
+  }
+
+  function chipGroup(title, key, counts, labelMap, order){
+    var keys = order ? order.filter(function(k){ return counts[k]; }) : Object.keys(counts).sort(function(a,b){
+      if(counts[b] !== counts[a]) return counts[b] - counts[a];
+      return String(labelOf(a, labelMap)).localeCompare(String(labelOf(b, labelMap)));
+    });
+    return {title:title, key:key, counts:counts, labelMap:labelMap, keys:keys};
+  }
+  function labelOf(k, labelMap){
+    if(labelMap && labelMap[k]) return labelMap[k];
+    if(k === "unset") return "Unset";
+    return stageLabel(k).replace(/^./, function(c){ return c.toUpperCase(); });
+  }
+
+  function renderFilters(){
+    var rows = state.orgs.filter(function(o){ return bucket(o) === state.tab; });
+    var groups = state.loaded ? filterGroups(state.tab, rows) : [];
+    $("rail-filters").innerHTML = groups.map(function(g){
+      var html = '<div class="rail-group"><label>'+esc(g.title)+'</label><div class="chip-list">';
+      html += chipHtml("all", "All", rows.length, state[g.key], g.key);
+      g.keys.forEach(function(k){
+        html += chipHtml(k, labelOf(k, g.labelMap), g.counts[k], state[g.key], g.key);
+      });
+      html += '</div></div>';
+      return html;
+    }).join("");
+    var box = $("mobile-filters");
+    box.innerHTML = "";
+    groups.slice(0, 3).forEach(function(g){
+      var sel = document.createElement("select");
+      sel.setAttribute("aria-label", g.title);
+      var all = document.createElement("option");
+      all.value = "all";
+      all.textContent = g.title + ": all";
+      sel.appendChild(all);
+      g.keys.forEach(function(k){
+        var opt = document.createElement("option");
+        opt.value = k;
+        opt.textContent = labelOf(k, g.labelMap) + " (" + g.counts[k] + ")";
+        sel.appendChild(opt);
+      });
+      sel.value = state[g.key] || "all";
+      sel.addEventListener("change", function(){
+        state[g.key] = sel.value;
+        renderLists();
+        renderFilters();
+      });
+      box.appendChild(sel);
+    });
+  }
+  function chipHtml(val, label, count, active, key){
+    return '<button type="button" class="chip'+(active===val?" active":"")+'" data-val="'+esc(val)+'" data-key="'+esc(key)+'">'+esc(label)+'<span class="count">'+count+'</span></button>';
+  }
+
+  $("rail-filters").addEventListener("click", function(e){
+    var chip = e.target.closest(".chip");
+    if(!chip) return;
+    state[chip.dataset.key] = chip.dataset.val;
+    render();
+  });
+
+  $("search").addEventListener("input", function(){
+    state.search = this.value.trim().toLowerCase();
+    renderLists();
+  });
+
+  function hay(o){
+    var parts = [o.domain, o.name, o.city, o.region, o.summary, o.notes, o.next_action, o.specialty, o.vertical, o.kind, o.relationship, o.stage, o.web_vendor, o.vendor_note, legacyType(o)];
+    (o.contacts||[]).forEach(function(c){ parts.push(c.name, c.email, c.role, c.hook); });
+    (o.locations||[]).forEach(function(l){ parts.push(l.label, l.address, l.city, l.region); });
+    asArray(o.hooks).forEach(function(h){ parts.push(h); });
+    (o.work||[]).forEach(function(w){
+      parts.push(w.work_type, w.notes, w.served_via, w.status);
+      if(w.served_via) parts.push(partnerName(w.served_via));
+    });
+    return parts.filter(function(p){ return p != null && p !== ""; }).join(" ").toLowerCase();
+  }
+
+  function matches(o){
+    if(state.search && hay(o).indexOf(state.search) === -1) return false;
+    if(state.tab === "clients" && state.filterRel !== "all" && o.relationship !== state.filterRel) return false;
+    if(state.tab === "partners" && state.filterRel !== "all" && o.relationship !== state.filterRel) return false;
+    if((state.tab === "conversion" || state.tab === "prospects" || state.tab === "partners") && state.filterStage !== "all" && (o.stage||"new") !== state.filterStage) return false;
+    if(state.tab === "prospects" && state.filterVertical !== "all" && (o.vertical||"unset") !== state.filterVertical) return false;
+    if(state.tab === "prospects" && state.filterSpend !== "all"){
+      var sp = (latestAudit(o) || {}).spend_signal || "unknown";
+      if(sp !== state.filterSpend) return false;
+    }
+    if(state.tab === "conversion" && state.filterPartner !== "all"){
+      var key = conversionPartnerKey(o) || "unset";
+      if(key !== state.filterPartner) return false;
+    }
+    if(state.tab === "conversion" && state.filterFlag !== "all"){
+      var d = dncActive(o), k = !!o.partner_conflict;
+      if(state.filterFlag === "dnc" && !d) return false;
+      if(state.filterFlag === "conflict" && !k) return false;
+      if(state.filterFlag === "clear" && (d || k)) return false;
     }
     return true;
   }
 
-  // ---------- leads list ----------
-  function renderLeads(){
-    var rows = state.leads.filter(matchesFilters);
-    $("stat-total").textContent = state.leads.length;
-    $("leads-count-sub").textContent = rows.length + " shown of " + state.leads.length;
-    if(!rows.length){
-      $("leads-list").innerHTML = '<div class="empty">No leads match these filters.</div>';
+  function render(){
+    paintTabs();
+    renderFilters();
+    renderLists();
+  }
+
+  function subtitle(tab, all, shown){
+    if(tab === "clients"){
+      var d = all.filter(function(o){ return o.relationship === "direct_client"; }).length;
+      var p = all.filter(function(o){ return o.relationship === "past_direct_client"; }).length;
+      return d + " direct · " + p + " past direct · " + shown.length + " shown";
+    }
+    if(tab === "conversion"){
+      var dnc = all.filter(dncActive).length;
+      return all.length + " past partner practices · " + dnc + " do not contact · " + shown.length + " shown";
+    }
+    if(tab === "prospects"){
+      var g = all.filter(function(o){ return o.kind === "practice_group"; }).length;
+      return (all.length - g) + " practices · " + g + " groups · " + shown.length + " shown";
+    }
+    return all.length + " agencies · " + shown.length + " shown";
+  }
+
+  function renderLists(){
+    var tab = state.tab;
+    var all = state.orgs.filter(function(o){ return bucket(o) === tab; });
+    var shown = all.filter(matches);
+    var sub = $(tab+"-count-sub");
+    var list = $(tab+"-list");
+    if(!state.loaded){
+      if(sub) sub.textContent = "";
+      list.innerHTML = '<div class="empty">Loading…</div>';
       return;
     }
-    $("leads-list").innerHTML = rows.map(function(l){
-      var name = l.name || l.doc_id;
-      var type = l.type ? (TYPE_LABEL[l.type]||l.type) : "Unclassified";
-      var status = l.status || "new";
-      var spend = (l.data && l.data.ads && l.data.ads.spend_signal) || null;
-      var next = l.next_action || (l.data && l.data.summary) || "";
-      var badges = pill(type, "muted");
-      if(l.front) badges += pill(l.front==="direct"?"Direct":"Partner", l.front==="direct"?"info":"muted");
-      badges += pill(statusLabel(status), STATUS_PILL[status]||"muted");
-      if(spend && spend!=="unknown") badges += pill(spend+" spend", SPEND_PILL[spend]||"muted");
-      return '<div class="row" data-doc="'+esc(l.doc_id)+'">'
-        + '<div class="row-top"><span class="row-name">'+esc(name)+'</span><span class="row-domain">'+esc(l.doc_id)+'</span>'
-        + '<div class="row-badges">'+badges+'</div></div>'
-        + (next ? '<div class="row-sub">'+esc(next)+'</div>' : '')
-        + '</div>';
-    }).join("");
-    [].slice.call(document.querySelectorAll(".row")).forEach(function(r){
-      r.addEventListener("click", function(){ openDrawer(r.dataset.doc); });
+    if(sub) sub.textContent = state.loadError ? "" : subtitle(tab, all, shown);
+    if(state.loadError){
+      list.innerHTML = '<div class="empty">The desk didn’t load.</div>';
+      return;
+    }
+    if(!state.orgs.length){
+      list.innerHTML = '<div class="empty">No organizations are visible to this account.</div>';
+      return;
+    }
+    if(!shown.length){
+      list.innerHTML = '<div class="empty">Nothing in this tab matches.</div>';
+      return;
+    }
+    list.innerHTML = renderTab(tab, shown);
+  }
+
+  function renderTab(tab, rows){
+    if(tab === "clients") return renderNamedGroups(rows, CLIENT_GROUPS, function(o){ return o.relationship; });
+    if(tab === "partners") return renderNamedGroups(rows, PARTNER_GROUPS, function(o){ return o.relationship; });
+    if(tab === "conversion") return renderConversion(rows);
+    return renderProspects(rows);
+  }
+
+  function groupWrap(title, blurb, rows){
+    if(!rows.length) return "";
+    return '<div class="client-group"><div class="client-group-head"><span class="client-group-title">'+esc(title)+'</span>'
+      + '<span class="client-group-blurb">'+esc(blurb)+'</span></div>'
+      + rows.map(orgRow).join("") + '</div>';
+  }
+
+  function renderNamedGroups(rows, groups, keyFn){
+    var used = {}, html = "";
+    groups.forEach(function(g){
+      var part = rows.filter(function(o){ return keyFn(o) === g.key; }).sort(sortOrg);
+      part.forEach(function(o){ used[o.domain] = true; });
+      html += groupWrap(g.heading, g.blurb, part);
     });
+    var rest = rows.filter(function(o){ return !used[o.domain]; }).sort(sortOrg);
+    html += groupWrap("Other", "Doesn't sit in a named group yet.", rest);
+    return html;
   }
 
-  // ---------- clients ----------
-  // Three buckets, deliberately separate: "client" is a direct DNA Media client,
-  // "partner_client" is video/photo work that came through a partner agency,
-  // "past_client" is finished work kept for history.
-  var CLIENT_GROUPS = [
-    {status:"client",         heading:"Direct clients",  blurb:"Signed direct \u2014 the DNA Media offer."},
-    {status:"partner_client", heading:"Through partners", blurb:"Video/photo production booked via a partner agency."},
-    {status:"past_client",    heading:"Past clients",     blurb:"Work completed; kept for history."}
-  ];
-  function isClient(l){ return ["client","partner_client","past_client"].indexOf(l.status||"new") > -1; }
-  function isDirectClient(l){ return (l.status||"new")==="client"; }
-  function clientSince(l){ return (l.data && (l.data.client_since || l.data.signed_on)) || null; }
-  function viaPartner(l){ return (l.data && l.data.via_partner) || null; }
-
-  function updateClientTabCount(){
-    var n = state.leads.filter(isClient).length;
-    $("tab-clients").textContent = n ? ("Clients \u00b7 " + n) : "Clients";
+  function renderConversion(rows){
+    var map = {};
+    rows.forEach(function(o){
+      var k = conversionPartnerKey(o) || "";
+      (map[k] = map[k] || []).push(o);
+    });
+    var keys = Object.keys(map).sort(function(a,b){
+      if(!a) return 1;
+      if(!b) return -1;
+      if(map[b].length !== map[a].length) return map[b].length - map[a].length;
+      return partnerName(a).localeCompare(partnerName(b));
+    });
+    return keys.map(function(k){
+      var list = map[k].slice().sort(sortOrg);
+      var heading = k ? partnerName(k) : "No partner on file";
+      var blurb = k
+        ? (list.length + (list.length===1?" practice":" practices") + " served through this partner")
+        : "Past partner practices with no served-via partner";
+      return groupWrap(heading, blurb, list);
+    }).join("");
   }
 
-  function clientRow(l){
-    var name = l.name || l.doc_id;
-    var type = l.type ? (TYPE_LABEL[l.type]||l.type) : "Unclassified";
-    var since = clientSince(l);
-    var via = viaPartner(l);
-    var next = l.next_action || (l.data && l.data.summary) || "";
-    var badges = pill(type, "muted") + pill(statusLabel(l.status), STATUS_PILL[l.status]||"muted");
-    if(via) badges += pill("via " + via, "accent");
-    if(since) badges += pill("since " + since, "info");
-    return '<div class="row" data-doc="'+esc(l.doc_id)+'">'
-      + '<div class="row-top"><span class="row-name">'+esc(name)+'</span><span class="row-domain">'+esc(l.doc_id)+'</span>'
+  function renderProspects(rows){
+    var practices = rows.filter(function(o){ return o.kind !== "practice_group"; }).sort(sortOrg);
+    var groups = rows.filter(function(o){ return o.kind === "practice_group"; }).sort(sortOrg);
+    return groupWrap("Practices", "Not signed direct yet.", practices)
+      + groupWrap("Practice groups", "Multi-site groups still in prospecting.", groups);
+  }
+
+  function orgRow(o){
+    var cls = "row";
+    var sub = rowSub(o);
+    if(dncActive(o)) cls += " row-dnc";
+    else if(o.partner_conflict) cls += " row-conflict";
+    var badges = "";
+    if(o.kind === "practice_group") badges += pill("Group", "muted");
+    var lt = legacyType(o);
+    if(lt) badges += pill(typeLabel(lt), "muted");
+    badges += pill(REL_LABEL[o.relationship] || humanize(o.relationship), REL_PILL[o.relationship] || "muted");
+    badges += pill(stageLabel(o.stage), STAGE_PILL[o.stage] || "muted");
+    var audit = latestAudit(o);
+    if(audit && audit.spend_signal && audit.spend_signal !== "unknown"){
+      var spendText = audit.spend_signal === "none" ? "no ad spend" : (audit.spend_signal + " spend");
+      badges += pill(spendText, SPEND_PILL[audit.spend_signal] || "muted");
+    }
+    if(dncActive(o)) badges += pill("Do not contact until " + formatDate(dncDate(o)), "danger");
+    else if(dncDate(o)) badges += pill("DNC ended " + formatDate(dncDate(o)), "muted");
+    if(o.partner_conflict) badges += pill("Partner conflict", "warn");
+    var via = partnerLabels(o);
+    if(bucket(o) === "conversion" && via.length) badges += pill("via " + via.join(", "), "accent");
+    if((o.relationship === "direct_client" || o.relationship === "past_direct_client") && o.client_since){
+      badges += pill("since " + formatDate(o.client_since), "info");
+    }
+    return '<div class="'+cls+'" data-domain="'+esc(o.domain)+'">'
+      + '<div class="row-top"><span class="row-name">'+esc(o.name || o.domain)+'</span>'
+      + '<span class="row-domain">'+esc(o.domain)+'</span>'
       + '<div class="row-badges">'+badges+'</div></div>'
-      + (next ? '<div class="row-sub">'+esc(next)+'</div>' : '')
+      + (sub ? '<div class="row-sub">'+sub+'</div>' : '')
       + '</div>';
   }
 
-  function renderClients(){
-    function matchesSearch(l){
-      if(!state.search) return true;
-      var hay = [l.doc_id, l.name, l.website, l.notes, l.next_action, viaPartner(l), (l.data&&l.data.summary)].join(" ").toLowerCase();
-      return hay.indexOf(state.search)!==-1;
-    }
-    function bySince(a,b){
-      var da = clientSince(a) || "", db = clientSince(b) || "";
-      if(da && db) return db.localeCompare(da);
-      if(db) return 1;
-      if(da) return -1;
-      return (a.name||"").localeCompare(b.name||"");
-    }
-
-    var all = state.leads.filter(isClient);
-    var directCount = all.filter(isDirectClient).length;
-    var partnerCount = all.filter(function(l){return l.status==="partner_client";}).length;
-    var pastCount = all.length - directCount - partnerCount;
-    var sub = [];
-    if(directCount) sub.push(directCount + " direct");
-    if(partnerCount) sub.push(partnerCount + " through partners");
-    if(pastCount) sub.push(pastCount + " past");
-    $("clients-count-sub").textContent = sub.join(" \u00b7 ");
-
-    if(!all.length){
-      $("clients-list").innerHTML = '<div class="empty">No clients yet. Set a lead\u2019s status to <strong>client</strong> and it moves here.</div>';
-      return;
-    }
-
-    var html = "";
-    var shown = 0;
-    CLIENT_GROUPS.forEach(function(g){
-      var rows = all.filter(function(l){return l.status===g.status;}).filter(matchesSearch).sort(bySince);
-      if(!rows.length) return;
-      shown += rows.length;
-      html += '<div class="client-group">'
-        + '<div class="client-group-head"><span class="client-group-title">'+esc(g.heading)+'</span>'
-        + '<span class="client-group-blurb">'+esc(g.blurb)+'</span></div>'
-        + rows.map(clientRow).join("")
-        + '</div>';
+  function rowSub(o){
+    var lines = [];
+    var place = [o.city, o.specialty].filter(Boolean).map(esc).join(" · ");
+    if(place) lines.push(place);
+    (o.work || []).forEach(function(w){
+      var bits = [
+        w.served_via ? partnerName(w.served_via) : (w.front === "direct" ? "Direct" : ""),
+        w.work_type || "",
+        w.status ? humanize(w.status) : "",
+        w.shot_on ? formatDate(w.shot_on) : ""
+      ].filter(Boolean).map(esc);
+      if(bits.length) lines.push(bits.join(" · "));
     });
-    $("clients-list").innerHTML = shown ? html : '<div class="empty">No clients match this search.</div>';
-    [].slice.call($("clients-list").querySelectorAll(".row")).forEach(function(r){
-      r.addEventListener("click", function(){ openDrawer(r.dataset.doc); });
-    });
+    if(o.next_action) lines.push(esc(o.next_action));
+    else if(!(o.work || []).length && o.summary) lines.push(esc(o.summary));
+    return lines.join("<br>");
   }
 
-  // ---------- drawer ----------
-  function findLead(docId){ return state.leads.filter(function(l){return l.doc_id===docId;})[0]; }
+  document.body.addEventListener("click", function(e){
+    var jump = e.target.closest("[data-jump]");
+    if(jump && jump.dataset.jump){ openDrawer(jump.dataset.jump); return; }
+    var row = e.target.closest(".row");
+    if(row && row.dataset.domain && !e.target.closest("#drawer")) openDrawer(row.dataset.domain);
+  });
 
-  function openDrawer(docId){
-    var l = findLead(docId);
-    if(!l) return;
-    state.activeDocId = docId;
-    var d = l.data || {};
-    $("d-name").textContent = l.name || docId;
-    var site = l.website || d.website || "";
+  function openDrawer(domain){
+    var o = state.byDomain[domain];
+    if(!o) return;
+    if(state.flash && state.flash.domain !== domain) state.flash = null;
+    state.activeDomain = domain;
+    $("d-name").textContent = o.name || domain;
     var siteLink = $("d-site");
-    if(site){ siteLink.href = site.indexOf("http")===0 ? site : "https://"+site; siteLink.textContent = site; siteLink.classList.remove("hidden"); }
-    else { siteLink.classList.add("hidden"); }
-
-    var sections = [];
-
-    // editable fields
-    sections.push(
-      '<div class="dsec"><label>Status &amp; next step</label>'
-      + '<div class="dsec-row" style="margin-bottom:8px">'
-      + '<select id="e-status">' + STATUS_OPTS.map(function(s){return '<option value="'+s+'"'+(s===(l.status||"new")?" selected":"")+'>'+statusLabel(s)+'</option>';}).join("") + '</select>'
-      + '<select id="e-front" style="max-width:140px"><option value="">no front</option><option value="direct"'+(l.front==="direct"?" selected":"")+'>Direct</option><option value="partner"'+(l.front==="partner"?" selected":"")+'>Partner</option></select>'
-      + '</div>'
-      + '<textarea id="e-next" rows="2" placeholder="Next action">'+esc(l.next_action||"")+'</textarea>'
-      + '<div style="height:8px"></div>'
-      + '<textarea id="e-notes" rows="3" placeholder="Notes">'+esc(l.notes||"")+'</textarea>'
-      + '<div style="height:10px"></div>'
-      + '<div class="save-row"><button class="btn btn-primary" id="e-save">Save</button></div>'
-      + '</div>'
-    );
-
-    // contact
-    var emails = d.emails||[]; var phones = d.phones||[];
-    if(emails.length || phones.length){
-      sections.push('<div class="dsec"><label>Contact</label><div class="kv">'
-        + emails.map(function(e){ return '<div class="item"><span>'+esc(e.label||"Email")+'</span><span class="v">'+esc(e.address||"")+'</span></div>'; }).join("")
-        + phones.map(function(p){ return '<div class="item"><span>'+esc(p.label||"Phone")+'</span><span class="v mono">'+esc(p.number||"")+'</span></div>'; }).join("")
-        + '</div></div>');
-    }
-
-    // people
-    var people = d.people||[];
-    if(people.length){
-      sections.push('<div class="dsec"><label>People</label>' + people.map(function(p){
-        return '<div class="person"><span class="n">'+esc(p.name||"")+'</span> <span class="r">— '+esc(p.role||"")+'</span>'
-          + (p.email ? '<div class="mono" style="font-size:12px;margin-top:3px">'+esc(p.email)+'</div>' : "")
-          + (p.hook ? '<div class="h">'+esc(p.hook)+'</div>' : "")
-          + '</div>';
-      }).join("") + '</div>');
-    }
-
-    // locations / services / practice info
-    var locs = d.locations||[];
-    if(locs.length){
-      sections.push('<div class="dsec"><label>Locations</label><ul class="plain">' + locs.map(function(loc){
-        return '<li>'+esc(loc.label?loc.label+" — ":"")+esc(loc.address||"")+'</li>';
-      }).join("") + '</ul></div>');
-    }
-    var services = d.services||[];
-    if(services.length){
-      sections.push('<div class="dsec"><label>Services</label><div class="dsec-row">' + services.map(function(s){ return pill(s,"muted"); }).join("") + '</div></div>');
-    }
-
-    // vendor
-    if(d.vendor && (d.vendor.name || l.vendor_doc_id)){
-      var vendorLinkable = l.vendor_doc_id && findLead(l.vendor_doc_id);
-      sections.push('<div class="dsec"><label>Vendor behind the site</label><div class="kv">'
-        + '<div class="item"><span>Name</span><span class="v">'+(vendorLinkable ? '<span class="vendor-link" data-vendor="'+esc(l.vendor_doc_id)+'">'+esc(d.vendor.name||l.vendor_doc_id)+'</span>' : esc(d.vendor.name||""))+'</span></div>'
-        + (d.vendor.platform ? '<div class="item"><span>Platform</span><span class="v">'+esc(d.vendor.platform)+'</span></div>' : "")
-        + (d.vendor.evidence ? '<div class="item"><span>Evidence</span><span class="v">'+esc(d.vendor.evidence)+'</span></div>' : "")
-        + '</div></div>');
-    }
-
-    // ads
-    if(d.ads){
-      var ads = d.ads;
-      sections.push('<div class="dsec"><label>Ad spend</label><div class="dsec-row" style="margin-bottom:8px">'
-        + (ads.spend_signal ? pill("spend: "+ads.spend_signal, SPEND_PILL[ads.spend_signal]||"muted") : "")
-        + (ads.google_ads ? pill("google: "+ads.google_ads, "muted") : "")
-        + (ads.meta_ads ? pill("meta: "+ads.meta_ads, "muted") : "")
-        + (ads.call_tracking ? pill("calls: "+ads.call_tracking, "muted") : "")
-        + '</div>'
-        + (ads.live_ads ? '<div style="font-size:12.5px;color:var(--muted)">'+esc(ads.live_ads)+'</div>' : "")
-        + '</div>');
-    }
-
-    // gaps
-    var gaps = d.gaps||[];
-    if(gaps.length){
-      sections.push('<div class="dsec"><label>Gaps</label>' + gaps.map(function(g){
-        return '<div class="gap-item sev-'+esc(g.severity||"low")+'"><span class="t">'+esc(g.type||"")+'</span>'+esc(g.detail||"")+'</div>';
-      }).join("") + '</div>');
-    }
-
-    // hooks
-    var hooks = d.hooks||[];
-    if(hooks.length){
-      sections.push('<div class="dsec"><label>Hooks</label><ul class="plain">' + hooks.map(function(h){ return '<li>'+esc(h)+'</li>'; }).join("") + '</ul></div>');
-    }
-
-    // summary / notes-from-data
-    if(d.summary){
-      sections.push('<div class="dsec"><label>Summary</label><div style="font-size:13.5px">'+esc(d.summary)+'</div></div>');
-    }
-
-    $("d-body").innerHTML = sections.join("");
-    $("e-save").addEventListener("click", function(){ saveLeadEdits(docId); });
-    [].slice.call(document.querySelectorAll(".vendor-link")).forEach(function(v){
-      v.addEventListener("click", function(){ openDrawer(v.dataset.vendor); });
-    });
-
+    var href = siteHref(o.website || o.domain);
+    if(href){ siteLink.href = href; siteLink.textContent = o.website || o.domain; siteLink.classList.remove("hidden"); }
+    else siteLink.classList.add("hidden");
+    $("d-body").innerHTML = drawerHtml(o);
+    var save = $("e-save");
+    if(save) save.addEventListener("click", function(){ saveOrg(domain); });
     $("backdrop").classList.add("show");
     $("drawer").classList.add("show");
   }
@@ -798,80 +1016,337 @@ select{appearance:none}
   function closeDrawer(){
     $("backdrop").classList.remove("show");
     $("drawer").classList.remove("show");
-    state.activeDocId = null;
+    state.activeDomain = null;
   }
   $("drawer-close").addEventListener("click", closeDrawer);
   $("backdrop").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") closeDrawer(); });
 
-  function saveLeadEdits(docId){
-    var l = findLead(docId);
-    if(!l) return;
-    var status = $("e-status").value;
-    var front = $("e-front").value || null;
-    var next_action = $("e-next").value;
-    var notes = $("e-notes").value;
-    var newData = Object.assign({}, l.data||{}, {status:status, next_action:next_action, notes:notes, front: front||undefined});
-    // stamp the day they became a client the first time the status flips
-    if(status==="client" && !newData.client_since) newData.client_since = new Date().toISOString().slice(0,10);
-    var btn = $("e-save"); btn.textContent = "Saving…"; btn.disabled = true;
-    sb.from("leads").update({status:status, front:front, next_action:next_action, notes:notes, data:newData}).eq("doc_id", docId).select().then(function(res){
-      btn.disabled = false; btn.textContent = "Save";
-      if(res.error){ alert("Couldn't save: " + res.error.message); return; }
-      var updated = res.data && res.data[0];
-      if(updated){
-        var idx = state.leads.findIndex(function(x){return x.doc_id===docId;});
-        if(idx>-1) state.leads[idx] = updated;
+  function selectHtml(id, options, current){
+    return '<select id="'+id+'">' + options.map(function(opt){
+      return '<option value="'+esc(opt.value)+'"'+(opt.value===current?" selected":"")+'>'+esc(opt.label)+'</option>';
+    }).join("") + '</select>';
+  }
+  function relOptions(o){
+    var keys = (o.kind === "agency" ? AGENCY_RELS : PRACTICE_RELS).slice();
+    if(o.relationship && keys.indexOf(o.relationship) === -1) keys.unshift(o.relationship);
+    return keys.map(function(k){ return {value:k, label: REL_LABEL[k] || humanize(k)}; });
+  }
+  function stageOptions(o){
+    var keys = STAGE_OPTS.slice();
+    if(o.stage && keys.indexOf(o.stage) === -1) keys.unshift(o.stage);
+    return keys.map(function(k){ return {value:k, label: stageLabel(k)}; });
+  }
+
+  function drawerHtml(o){
+    var sections = [];
+    var dnc = dncDate(o);
+    if(dnc && dncActive(o)){
+      sections.push('<div class="flag-banner dnc">Do not contact until '+esc(formatDate(dnc))+'.</div>');
+    } else if(dnc){
+      sections.push('<div class="flag-banner conflict">Do-not-contact window ended '+esc(formatDate(dnc))+'.</div>');
+    }
+    if(o.partner_conflict){
+      sections.push('<div class="flag-banner conflict">Partner conflict. This one is still tied to a partner — check before direct outreach.</div>');
+    }
+
+    var flash = (state.flash && state.flash.domain === o.domain) ? state.flash.text : "";
+    sections.push(
+      '<div class="dsec"><label class="head">Relationship and stage</label>'
+      + '<div class="grid2" style="margin-bottom:8px">'
+      + selectHtml("e-rel", relOptions(o), o.relationship)
+      + selectHtml("e-stage", stageOptions(o), o.stage || "new")
+      + '</div>'
+      + '<textarea id="e-next" rows="2" placeholder="Next action">'+esc(o.next_action||"")+'</textarea>'
+      + '<div style="height:8px"></div>'
+      + '<textarea id="e-notes" rows="3" placeholder="Notes">'+esc(o.notes||"")+'</textarea>'
+      + '<div style="height:10px"></div>'
+      + '<div class="save-row"><span id="e-msg" class="save-msg'+(flash?" ok":"")+'">'+esc(flash)+'</span>'
+      + '<button class="btn btn-primary" id="e-save" type="button">Save</button></div>'
+      + '<div class="hint">Track follows the relationship automatically ('+esc(o.track || bucket(o))+'). Stage and relationship changes are logged for you.</div>'
+      + '</div>'
+    );
+
+    if(o.summary) sections.push('<div class="dsec"><label class="head">Summary</label><div style="font-size:13.5px">'+esc(o.summary)+'</div></div>');
+
+    if(o.contacts.length){
+      sections.push('<div class="dsec"><label class="head">Contacts</label><div class="stack">'
+        + o.contacts.map(contactHtml).join("") + '</div></div>');
+    }
+    var phones = asArray(o.phones);
+    if(phones.length){
+      sections.push('<div class="dsec"><label class="head">Phone lines</label><div class="kv">'
+        + phones.map(function(p){
+          var label = (p && (p.label || p.name)) || "Phone";
+          var num = (p && (p.number || p.phone)) || (typeof p === "string" ? p : "");
+          return '<div class="item"><span>'+esc(label)+'</span><span class="v mono">'+esc(num)+'</span></div>';
+        }).join("") + '</div></div>');
+    }
+
+    if(o.locations.length){
+      sections.push('<div class="dsec"><label class="head">Locations</label><ul class="plain">'
+        + o.locations.map(function(l){
+          var bits = [];
+          if(l.label) bits.push(l.label);
+          if(l.address) bits.push(l.address);
+          else if(l.city || l.region) bits.push([l.city, l.region].filter(Boolean).join(", "));
+          if(l.phone) bits.push(l.phone);
+          return '<li>'+esc(bits.join(" — ") || "Location")+'</li>';
+        }).join("") + '</ul></div>');
+    }
+
+    if(o.work.length){
+      sections.push('<div class="dsec"><label class="head">Past work</label><div class="stack">'
+        + o.work.map(workCard).join("") + '</div></div>');
+    }
+
+    var audit = latestAudit(o);
+    if(audit){
+      var gaps = asArray(audit.gaps);
+      if(gaps.length){
+        sections.push('<div class="dsec"><label class="head">Gaps'+(audit.checked_on ? " · "+esc(formatDate(audit.checked_on)) : "")+'</label>'
+          + gaps.map(function(g){
+            var sev = (g && (g.severity === "high" || g.severity === "medium" || g.severity === "low")) ? g.severity : "low";
+            var title = typeof g === "string" ? g : (g.title || g.type || "Gap");
+            var detail = (g && typeof g === "object") ? (g.detail || "") : "";
+            return '<div class="gap-item sev-'+sev+'"><span class="t">'+esc(title)+'</span>'+esc(detail)+'</div>';
+          }).join("") + '</div>');
       }
-      renderChips(); renderLeads(); renderClients(); updateClientTabCount();
+      sections.push(auditHtml(o, audit));
+    }
+
+    var hooks = asArray(o.hooks);
+    if(hooks.length){
+      sections.push('<div class="dsec"><label class="head">Hooks</label><ul class="plain">'
+        + hooks.map(function(h){ return '<li>'+esc(h)+'</li>'; }).join("") + '</ul></div>');
+    }
+
+    if(o.web_vendor || o.vendor_platform || o.vendor_evidence || o.vendor_note){
+      var vname = o.web_vendor ? partnerName(o.web_vendor) : "";
+      var nameHtml = (o.web_vendor && state.byDomain[o.web_vendor])
+        ? '<button type="button" class="vendor-link" data-jump="'+esc(o.web_vendor)+'">'+esc(vname)+'</button>'
+        : esc(vname || o.vendor_note || "");
+      sections.push('<div class="dsec"><label class="head">Site vendor</label><div class="kv">'
+        + (vname || o.vendor_note ? '<div class="item"><span>Name</span><span class="v">'+nameHtml+'</span></div>' : '')
+        + (o.vendor_platform ? '<div class="item"><span>Platform</span><span class="v">'+esc(o.vendor_platform)+'</span></div>' : '')
+        + (o.vendor_evidence ? '<div class="item"><span>Evidence</span><span class="v">'+esc(o.vendor_evidence)+'</span></div>' : '')
+        + (o.vendor_note && o.web_vendor ? '<div class="item"><span>Note</span><span class="v">'+esc(o.vendor_note)+'</span></div>' : '')
+        + '</div></div>');
+    }
+
+    var services = asArray(o.services);
+    if(services.length){
+      sections.push('<div class="dsec"><label class="head">Services</label><div class="dsec-row">'
+        + services.map(function(s){ return pill(s, "muted"); }).join("") + '</div></div>');
+    }
+
+    var profile = agencyProfile(o);
+    if(profile) sections.push(profile);
+
+    var meta = metaItems(o);
+    if(meta.length){
+      sections.push('<div class="dsec"><label class="head">Details</label><div class="kv">'+meta.join("")+'</div></div>');
+    }
+
+    if(o.plan || o.mrr_cents != null || o.stripe_customer_id){
+      var mrr = o.mrr_cents == null ? "" : ("$" + (o.mrr_cents / 100).toFixed(2) + " / mo");
+      sections.push('<div class="dsec"><label class="head">Billing</label><div class="kv">'
+        + (o.plan ? '<div class="item"><span>Plan</span><span class="v">'+esc(o.plan)+'</span></div>' : '')
+        + (mrr ? '<div class="item"><span>MRR</span><span class="v mono">'+esc(mrr)+'</span></div>' : '')
+        + (o.stripe_customer_id ? '<div class="item"><span>Stripe</span><span class="v mono">'+esc(o.stripe_customer_id)+'</span></div>' : '')
+        + '</div></div>');
+    }
+
+    if(o.activities.length){
+      sections.push('<div class="dsec"><label class="head">Recent activity</label><ul class="plain">'
+        + o.activities.slice(0, 8).map(function(a){
+          var change = (a.from_value || a.to_value) ? (" "+esc(a.from_value||"—")+" → "+esc(a.to_value||"—")) : "";
+          return '<li><span class="mono">'+esc(formatDate(a.occurred_at))+'</span> · '+esc(humanize(a.kind))+change
+            + (a.summary ? " — "+esc(a.summary) : "") + '</li>';
+        }).join("") + '</ul></div>');
+    }
+
+    return sections.join("");
+  }
+
+  function contactHtml(c){
+    var tags = "";
+    if(c.is_poc) tags += " " + pill("POC", "ok");
+    if(c.is_generic_inbox) tags += " " + pill("inbox", "muted");
+    return '<div class="person"><span class="n">'+esc(c.name || c.email || "Contact")+'</span>'
+      + (c.role ? ' <span class="r">— '+esc(c.role)+'</span>' : '')
+      + tags
+      + (c.email ? '<div class="mono" style="font-size:12px;margin-top:3px">'+esc(c.email)+'</div>' : '')
+      + (c.phone ? '<div class="mono" style="font-size:12px">'+esc(c.phone)+'</div>' : '')
+      + (c.hook ? '<div class="h">'+esc(c.hook)+'</div>' : '')
+      + '</div>';
+  }
+
+  function workCard(w){
+    var who = w.served_via ? partnerName(w.served_via) : "Direct";
+    var whoHtml = (w.served_via && state.byDomain[w.served_via])
+      ? '<button type="button" class="vendor-link" data-jump="'+esc(w.served_via)+'">'+esc(who)+'</button>'
+      : esc(who);
+    var bits = [w.front ? humanize(w.front) : "", w.work_type || "", w.status ? humanize(w.status) : "", w.shot_on ? formatDate(w.shot_on) : ""].filter(Boolean);
+    var links = "";
+    if(siteHref(w.gallery_url)) links += ' <a href="'+esc(siteHref(w.gallery_url))+'" target="_blank" rel="noopener">Gallery</a>';
+    if(siteHref(w.review_url)) links += ' <a href="'+esc(siteHref(w.review_url))+'" target="_blank" rel="noopener">Review</a>';
+    return '<div class="work-card"><div class="t">'+whoHtml+'</div>'
+      + (bits.length ? '<div>'+esc(bits.join(" · "))+links+'</div>' : (links ? '<div>'+links+'</div>' : ''))
+      + (w.notes ? '<div class="n">'+esc(w.notes)+'</div>' : '')
+      + '</div>';
+  }
+
+  function auditHtml(o, audit){
+    var tags = "";
+    if(audit.spend_signal) tags += pill("spend: "+audit.spend_signal, SPEND_PILL[audit.spend_signal] || "muted");
+    if(audit.google_ads) tags += pill("google: "+audit.google_ads, "muted");
+    if(audit.meta_ads) tags += pill("meta: "+audit.meta_ads, "muted");
+    if(audit.bing_ads) tags += pill("bing: "+audit.bing_ads, "muted");
+    if(audit.other_ads) tags += pill("other: "+audit.other_ads, "muted");
+    if(audit.call_tracking) tags += pill("calls: "+audit.call_tracking, "muted");
+    asArray(audit.tracking_tags).forEach(function(t){ tags += pill(t, "muted"); });
+    var extra = "";
+    if(o.audits.length > 1) extra += '<div class="hint">'+(o.audits.length-1)+' earlier audit'+(o.audits.length===2?"":"s")+' on file. Showing the latest.</div>';
+    return '<div class="dsec"><label class="head">Audit'+(audit.checked_on ? " · "+esc(formatDate(audit.checked_on)) : "")+'</label>'
+      + (tags ? '<div class="dsec-row" style="margin-bottom:8px">'+tags+'</div>' : '')
+      + (audit.live_ads ? '<div style="font-size:12.5px;color:var(--muted)">'+esc(audit.live_ads)+'</div>' : '')
+      + (audit.evidence ? '<div class="hint">'+esc(audit.evidence)+'</div>' : '')
+      + extra
+      + '</div>';
+  }
+
+  function agencyProfile(o){
+    var serves = asArray(o.serves);
+    var states = asArray(o.states);
+    if(!serves.length && !states.length && !o.stance && !o.video_inhouse && !o.video_note && !o.state_count) return "";
+    var html = '<div class="dsec"><label class="head">Partner profile</label>';
+    if(serves.length) html += '<div class="dsec-row" style="margin-bottom:8px">'+serves.map(function(s){ return pill(s,"muted"); }).join("")+'</div>';
+    html += '<div class="kv">';
+    if(o.stance) html += '<div class="item"><span>Stance</span><span class="v">'+esc(o.stance)+'</span></div>';
+    if(o.video_inhouse) html += '<div class="item"><span>Video in house</span><span class="v">'+esc(o.video_inhouse)+'</span></div>';
+    if(o.state_count != null) html += '<div class="item"><span>States</span><span class="v">'+esc(o.state_count)+'</span></div>';
+    if(states.length) html += '<div class="item"><span>Confirmed</span><span class="v">'+esc(states.join(", "))+'</span></div>';
+    html += '</div>';
+    if(o.video_note) html += '<div class="hint">'+esc(o.video_note)+'</div>';
+    html += '</div>';
+    return html;
+  }
+
+  function metaItems(o){
+    var items = [];
+    function add(k, v){ if(v != null && v !== "") items.push('<div class="item"><span>'+esc(k)+'</span><span class="v">'+esc(v)+'</span></div>'); }
+    add("Kind", o.kind === "practice_group" ? "Practice group" : humanize(o.kind));
+    if(o.vertical) add("Type", typeLabel(legacyType(o)));
+    add("Specialty", o.specialty);
+    add("Target front", o.target_front);
+    add("Priority", o.priority);
+    if(o.client_since) add("Client since", formatDate(o.client_since));
+    if(o.date_found) add("Found", formatDate(o.date_found));
+    add("Locations", o.location_count);
+    add("Providers", o.provider_count);
+    add("Size", o.size_note);
+    if(o.city) add("City", o.city);
+    if(o.region && (!o.city || o.city.indexOf(o.region) === -1)) add("Region", o.region);
+    if(o.hours) add("Hours", o.hours);
+    if(o.insurance) add("Insurance", o.insurance);
+    if(o.campaign_id && state.campaigns[o.campaign_id]) add("Campaign", state.campaigns[o.campaign_id].name);
+    if(o.parent_group) add("Parent", partnerName(o.parent_group));
+    if(o.booking_url) add("Booking", o.booking_url);
+    return items;
+  }
+
+  function saveOrg(domain){
+    var o = state.byDomain[domain];
+    if(!o) return;
+    var relationship = $("e-rel").value;
+    var stage = $("e-stage").value;
+    var nextAction = $("e-next").value.trim();
+    var notes = $("e-notes").value.trim();
+    var btn = $("e-save");
+    var msg = $("e-msg");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    msg.className = "save-msg";
+    msg.textContent = "";
+    db.from("organizations").update({
+      relationship: relationship,
+      stage: stage,
+      next_action: nextAction || null,
+      notes: notes || null
+    }).eq("domain", domain).select().then(function(res){
+      if(res.error || !res.data || !res.data[0]){
+        btn.disabled = false;
+        btn.textContent = "Save";
+        msg.className = "save-msg err";
+        msg.textContent = (res.error && res.error.message) || "Save didn't change a row.";
+        return;
+      }
+      var updated = res.data[0];
+      var before = bucket(o);
+      Object.keys(updated).forEach(function(k){ o[k] = updated[k]; });
+      var after = bucket(o);
+      state.flash = {
+        domain: domain,
+        text: before === after ? "Saved." : ("Saved. Now listed under " + TAB_TITLE[after] + ".")
+      };
+      render();
+      db.from("activities").select("*").eq("org_domain", domain).order("occurred_at", {ascending:false}).limit(20).then(function(act){
+        if(act && act.data) o.activities = act.data;
+        openDrawer(domain);
+      }, function(){ openDrawer(domain); });
+    }, function(err){
+      btn.disabled = false;
+      btn.textContent = "Save";
+      msg.className = "save-msg err";
+      msg.textContent = err && err.message ? err.message : "Couldn't save.";
     });
   }
 
-  // ---------- angles ----------
-  function renderAngles(){
-    if(!state.angles.length){ $("angles-list").innerHTML = '<div class="empty">No angles saved yet.</div>'; return; }
-    $("angles-list").innerHTML = state.angles.map(function(a, i){
-      var d = a.data || {};
-      var proof = d.proof || [];
-      return '<div class="angle-card">'
-        + '<div class="angle-line">'+esc(a.title||"")+'</div>'
-        + (d.when ? '<div class="angle-when">'+esc(d.when)+'</div>' : "")
-        + '<div class="angle-meta">'
-          + (d.audience ? pill(d.audience, "muted") : "")
-          + (a.vendor_doc_id ? pill("vs. "+a.vendor_doc_id, "accent") : "")
-          + (d.status ? pill(d.status, "muted") : "")
-        + '</div>'
-        + (proof.length ? '<button class="angle-toggle" data-i="'+i+'">Show proof ('+proof.length+')</button><ul class="plain angle-proof" id="proof-'+i+'">'+proof.map(function(p){return '<li>'+esc(p)+'</li>';}).join("")+'</ul>' : "")
-        + '</div>';
-    }).join("");
-    [].slice.call(document.querySelectorAll(".angle-toggle")).forEach(function(btn){
-      btn.addEventListener("click", function(){
-        var box = $("proof-"+btn.dataset.i);
-        var showing = box.classList.toggle("show");
-        btn.textContent = (showing?"Hide proof":"Show proof") + " (" + box.querySelectorAll("li").length + ")";
-      });
-    });
-  }
-
-  // ---------- add lead modal ----------
   $("add-lead-btn").addEventListener("click", function(){ $("add-modal").classList.add("show"); });
   $("af-cancel").addEventListener("click", function(){ $("add-modal").classList.remove("show"); $("add-form").reset(); });
   $("add-form").addEventListener("submit", function(e){
     e.preventDefault();
-    var doc_id = $("af-domain").value.trim().replace(/^https?:\/\//,"").replace(/\/$/,"");
+    var domain = $("af-domain").value.trim().toLowerCase().replace(/^https?:\/\//,"").replace(/^www\./,"").replace(/\/.*$/,"").replace(/\.$/,"");
     var name = $("af-name").value.trim();
     var type = $("af-type").value;
     var front = $("af-front").value || null;
     var website = $("af-website").value.trim();
     var notes = $("af-notes").value.trim();
-    var data = {practice_name:name, website:website, notes:notes, status:"new", type:type, date_found: new Date().toISOString().slice(0,10)};
-    var btn = $("af-submit"); btn.disabled = true; btn.textContent = "Adding…";
-    sb.from("leads").insert({doc_id:doc_id, name:name, type:type, front:front, status:"new", website:website, notes:notes, data:data}).select().then(function(res){
-      btn.disabled = false; btn.textContent = "Add";
+    if(!domain || !name) return;
+    var payload = {
+      doc_id: domain,
+      name: name,
+      type: type,
+      website: website || ("https://" + domain),
+      notes: notes,
+      front: front,
+      data: {
+        practice_name: name,
+        website: website || ("https://" + domain),
+        notes: notes,
+        type: type,
+        front: front || "",
+        date_found: todayISO()
+      }
+    };
+    var btn = $("af-submit");
+    btn.disabled = true;
+    btn.textContent = "Adding…";
+    db.rpc("capture_lead", {payload: payload}).then(function(res){
+      btn.disabled = false;
+      btn.textContent = "Add";
       if(res.error){ alert("Couldn't add lead: " + res.error.message); return; }
-      state.leads.unshift(res.data[0]);
+      var savedDomain = (typeof res.data === "string" && res.data) || domain;
+      state.pendingDomain = savedDomain;
+      state.tab = type === "agency" ? "partners" : "prospects";
       $("add-modal").classList.remove("show");
       $("add-form").reset();
-      renderChips(); renderLeads();
+      loadAll();
+    }, function(err){
+      btn.disabled = false;
+      btn.textContent = "Add";
+      alert("Couldn't add lead: " + (err && err.message ? err.message : "request failed"));
     });
   });
 })();
